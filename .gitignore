@@ -1,0 +1,10 @@
+lib
+*.o
+*.so
+*.d
+*.a
+test_esl
+test_auth2
+test_update
+test_pseries
+test_phyp
