@@ -337,7 +337,7 @@ pseries_apply_update (const auth_data_t *auth_data, uint8_t **new_esl_data,
       rc = append_update (auth_data, esl_data, esl_data_size, new_esl_data, new_esl_data_size);
       if (rc == SV_SUCCESS)
         {
-          if (is_after (&update_time, auth_data->current_time))
+          if (auth_data->current_time == NULL || is_after (&update_time, auth_data->current_time))
             *new_time = update_time;
           else
             *new_time = *auth_data->current_time;
