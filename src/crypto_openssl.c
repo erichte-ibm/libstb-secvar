@@ -379,6 +379,19 @@ pkcs7_signed_hash_verify (crypto_pkcs7_t *pkcs7, crypto_x509_t *x509, unsigned c
 
   /* verify on all signatures in pkcs7 */
   num_signers = sk_PKCS7_SIGNER_INFO_num (pkcs7->signer_info);
+  if (num_signers == 0)
+    {
+      prlog (PR_ERR, "ERROR: no signers to verify");
+      rc = SV_PKCS7_ERROR;
+      goto out;
+    }
+  else if (num_signers < 0)
+    {
+      prlog(PR_ERR, "ERROR: pkcs7->signer_info was NULL");
+      rc = SV_PKCS7_ERROR;
+      goto out;
+    }
+
   for (int s = 0; s < num_signers; s++)
     {
       /* make sure we can get the signature data */
