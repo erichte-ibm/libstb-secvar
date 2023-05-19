@@ -92,7 +92,7 @@ main (int argc, char **argv)
    * 6b:bb:47:0b:52:59:f6:9e:02:07:94:39:93:ea:4b:25:8b:51:0e:df:c5:1f:
    * a5:bd:ba:df:9f:ba:92:4e:4b:82
    */
-  if (rc == SV_SUCCESS && hash != NULL && hash[0] == 0x6b && hash[1] == 0xbb &&
+  if (rc == SV_SUCCESS && hash[0] == 0x6b && hash[1] == 0xbb &&
       hash[30] == 0x4b && hash[31] == 0x82)
     printf ("Test case-5 : PASSED\n");
   else
