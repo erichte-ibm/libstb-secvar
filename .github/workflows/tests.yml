@@ -1,0 +1,34 @@
+name: tests
+
+on: ['push', 'pull_request']
+
+jobs:
+  unit-tests:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: install test dependencies
+      run: sudo apt update && sudo apt install -y libssl-dev
+    - name: build libraries
+      run: make
+    - name: build tests
+      run: make tests
+    - name: run tests
+      run: make check
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: install dependencies
+      run: sudo apt update && sudo apt install -y libssl-dev cppcheck clang-tools clang valgrind
+    - name: run scan-build
+      run: make clean && scan-build make
+    - name: run cppcheck
+      run: make cppcheck
+    - name: run valgrind
+      run: make memcheck
