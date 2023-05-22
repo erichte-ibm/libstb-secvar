@@ -67,6 +67,9 @@ tests: $(LIB_DIR)/libstb-secvar-openssl.a
 check: $(LIB_DIR)/libstb-secvar-openssl.a
 	@$(MAKE) -C $(TEST_DIR) check
 
+memcheck: $(LIB_DIR)/libstb-secvar-openssl.a
+	@$(MAKE) -C $(TEST_DIR) memcheck
+
 cppcheck:
 	cppcheck --enable=all --suppress=missingIncludeSystem --force  \
 	         -D__BYTE_ORDER__=__LITTLE_ENDIAN__ $(SRCS) $(INCLUDE) \
