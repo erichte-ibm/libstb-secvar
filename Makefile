@@ -60,7 +60,7 @@ $(LIB_DIR)/libstb-secvar-openssl.so: $(OBJS)
 	@mkdir -p $(LIB_DIR)
 	$(LD) $(_LDFLAGS) -shared $^ -o $@
 
-check: $(LIB_DIR)/libstb-secvar-openssl.so test
+check: $(LIB_DIR)/libstb-secvar-openssl.a test
 	@$(MAKE) -C $(TEST_DIR) check
 
 cppcheck:
