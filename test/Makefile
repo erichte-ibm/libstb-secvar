@@ -10,8 +10,6 @@ SRC_DIR = ../src
 BIN_DIR =./bin
 LIB_DIR =../lib
 
-STATIC_LIB = 0
-
 INCLUDE = -I../include -I../
 
 TEST_SRCS = test_esl.c \
@@ -23,24 +21,13 @@ TEST_SRCS = test_esl.c \
 _LDFLAGS = $(LDFLAGS) -lcrypto -lstb-secvar-openssl -L$(LIB_DIR)
 _CFLAGS += $(CFLAGS) $(INCLUDE)
 
-TEST_OBJ = $(TEST_SRCS:.c=.o)
+BINS = $(patsubst %.c,$(BIN_DIR)/%,$(TEST_SRCS))
 
-all: $(patsubst %.c,$(BIN_DIR)/%,$(TEST_SRCS))
+all: $(BINS)
+check: $(patsubst test_%.c,%-check,$(TEST_SRCS))
 
-check: all
-ifeq ($(strip $(STATIC_LIB)), 1)
-	@$(BIN_DIR)/test_esl
-	@$(BIN_DIR)/test_auth2
-	@$(BIN_DIR)/test_update
-	@$(BIN_DIR)/test_pseries
-	@$(BIN_DIR)/test_phyp
-else
-	@LD_LIBRARY_PATH=$(LIB_DIR) $(BIN_DIR)/test_esl
-	@LD_LIBRARY_PATH=$(LIB_DIR) $(BIN_DIR)/test_auth2
-	@LD_LIBRARY_PATH=$(LIB_DIR) $(BIN_DIR)/test_update
-	@LD_LIBRARY_PATH=$(LIB_DIR) $(BIN_DIR)/test_pseries
-	@LD_LIBRARY_PATH=$(LIB_DIR) $(BIN_DIR)/test_phyp
-endif
+%-check: $(BIN_DIR)/test_%
+	@LD_LIBRARY_PATH=$(LIB_DIR) $<
 
 cppcheck:
 	cppcheck --enable=all --suppress=missingIncludeSystem --force \
