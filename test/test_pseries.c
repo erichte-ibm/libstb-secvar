@@ -23,6 +23,8 @@
 #include "data/priv_auth.h"
 #include "data/delete_db_by_kek_sesl_auth.h"
 #include "libstb-secvar-errors.h"
+#include <log.h>
+#include "test_utils.h"
 
 #define PK_LABEL (uint8_t *)"P\0K\0"
 #define KEK_LABEL (uint8_t *)"K\0E\0K\0"
@@ -37,7 +39,9 @@ main (int argc, char **argv)
   size_t KEK_size = 0, db_size = 0, dbx_size = 0, tmp_size = 0;
   sv_err_t rc;
 
-  printf ("\n11 test cases for variable update request\n\n");
+  libstb_log_level = 0;
+
+  printf ("testing pseries variable update request...");
 
   update_req.label = KEK_LABEL;
   update_req.label_size = 6;
@@ -50,15 +54,10 @@ main (int argc, char **argv)
 
   /* load a KEK */
   rc = pseries_update_variable (&update_req, &KEK, &KEK_size);
-  if (rc == SV_SUCCESS && (KEK_size == kek_esl_len + 8) &&
-      (memcmp (KEK + 8, kek_esl, kek_esl_len) == 0))
-    printf ("Test case-1 : PASSED\n");
-  else
-    {
-      printf ("Test case-1 : FAILED with rc = 0x%x\n", rc);
-      return 0;
-    }
-
+  assert_msg (rc == SV_SUCCESS, "expected success, got rc = %d\n", rc);
+  assert (KEK_size == kek_esl_len + 8);
+  assert (memcmp (KEK + 8, kek_esl, kek_esl_len) == 0);
+  
   memset (&update_req, 0x00, sizeof (update_req_t));
   update_req.label = DB_LABEL;
   update_req.label_size = 4;
@@ -73,14 +72,7 @@ main (int argc, char **argv)
 
   /* try a db by KEK */
   rc = pseries_update_variable (&update_req, &db, &db_size);
-  if (rc != SV_SUCCESS)
-    {
-      printf ("Test Case-2 : FAILED with rc = 0x%x\n", rc);
-      libstb_free (KEK);
-      return 0;
-    }
-  else
-    printf ("Test Case-2 : PASSED\n");
+  assert_msg (rc == SV_SUCCESS, "expected successs, got rc = %d\n", rc);
 
   memset (&update_req, 0x00, sizeof (update_req_t));
   update_req.label = DB_LABEL;
@@ -98,15 +90,9 @@ main (int argc, char **argv)
 
   /* this update should fail as being too old */
   rc = pseries_update_variable (&update_req, &tmp, &tmp_size);
-  if (rc != SV_TIMESTAMP_IN_PAST && tmp != NULL && tmp_size != 0)
-    {
-      printf ("Test Case-3 : FAILED with rc = 0x%x\n", rc);
-      libstb_free (KEK);
-      libstb_free (db);
-      return 0;
-    }
-  else
-    printf ("Test Case-3 : PASSED\n");
+  assert_msg (rc == SV_TIMESTAMP_IN_PAST, "expected timestamp in past, got rc = %d\n", rc);
+  assert (tmp == NULL);
+  assert (tmp_size == 0);
 
   memset (&update_req, 0x00, sizeof (update_req_t));
   update_req.label = DB_LABEL;
@@ -124,16 +110,11 @@ main (int argc, char **argv)
 
   /* deleting keys on db using KEK*/
   rc = pseries_update_variable (&update_req, &tmp, &tmp_size);
-  if (rc == SV_SUCCESS && tmp != NULL && tmp_size == 8)
-    printf ("Test Case-4 : PASSED\n");
-  else
-    {
-      printf ("Test Case-4 : FAILED with rc = 0x%x\n", rc);
-      libstb_free (KEK);
-      libstb_free (db);
-      return 0;
-    }
+  assert_msg (rc == SV_SUCCESS, "expected success, got rc = %d\n", rc);
+  assert (tmp != NULL);
+  assert (tmp_size == 8);
 
+  libstb_free (tmp);
   libstb_free (db);
 
   memset (&update_req, 0x00, sizeof (update_req_t));
@@ -152,15 +133,9 @@ main (int argc, char **argv)
 
   /* try a dbx */
   rc = pseries_update_variable (&update_req, &dbx, &dbx_size);
-  if (rc != SV_SUCCESS && dbx_size != dbx_256_a_esl_len + 8 &&
-      memcmp (dbx + 8, dbx_256_a_esl, dbx_256_a_esl_len) != 0)
-    {
-      printf ("Test Case-5 : FAILED with rc = 0x%x\n", rc);
-      libstb_free (KEK);
-      return 0;
-    }
-  else
-    printf ("Test Case-5 : PASSED\n");
+  assert_msg (rc == SV_SUCCESS, "expected success, got rc = %d\n", rc);
+  assert (dbx_size == dbx_256_a_esl_len + 8);
+  assert (memcmp (dbx + 8, dbx_256_a_esl, dbx_256_a_esl_len) == 0);
 
   memset (&update_req, 0x00, sizeof (update_req_t));
   update_req.label = DBX_LABEL;
@@ -178,14 +153,9 @@ main (int argc, char **argv)
 
   /* append another dbx */
   rc = pseries_update_variable (&update_req, &tmp, &tmp_size);
-  if (rc != SV_SUCCESS && tmp_size != dbx_size + dbx_512_b_esl_len &&
-      memcmp (tmp + 8 + dbx_256_a_esl_len, dbx_512_b_esl, dbx_512_b_esl_len) != 0)
-    {
-      printf ("Test Case-6 : FAILED with rc = 0x%x\n", rc);
-      goto clean;
-    }
-  else
-    printf ("Test Case-6 : PASSED\n");
+  assert_msg (rc == SV_SUCCESS, "expected success, got rc = %d\n", rc);
+  assert (tmp_size == dbx_size + dbx_512_b_esl_len);
+  assert (memcmp (tmp + 8 + dbx_256_a_esl_len, dbx_512_b_esl, dbx_512_b_esl_len) == 0);
 
   libstb_free (dbx);
   dbx = tmp;
@@ -211,13 +181,8 @@ main (int argc, char **argv)
    * should still fail
    */
   rc = pseries_update_variable (&update_req, &tmp, &tmp_size);
-  if (rc != SV_TIMESTAMP_IN_PAST && tmp != NULL)
-    {
-      printf ("Test Case-7 : FAILED with rc = 0x%x\n", rc);
-      goto clean;
-    }
-  else
-    printf ("Test Case-7 : PASSED\n");
+  assert_msg (rc == SV_TIMESTAMP_IN_PAST, "expected timestamp in past, got rc = %d\n", rc);
+  assert (tmp == NULL);
 
   memset (&update_req, 0x00, sizeof (update_req_t));
   update_req.label = PK_LABEL;
@@ -235,13 +200,9 @@ main (int argc, char **argv)
 
   /* try an otherwise bad PK update with auPu */
   rc = pseries_update_variable (&update_req, &tmp, &tmp_size);
-  if (rc != SV_SUCCESS && tmp_size != KEK_size && memcmp (tmp, KEK, KEK_size) != 0)
-    {
-      printf ("Test Case-8 : FAILED with rc = 0x%x\n", rc);
-      goto clean;
-    }
-  else
-    printf ("Test Case-8 : PASSED\n");
+  assert_msg (rc == SV_SUCCESS, "expected success, got rc = %d\n", rc);
+  assert (tmp_size == KEK_size);
+  assert (memcmp (tmp, KEK, KEK_size) == 0);
 
   libstb_free (tmp);
   tmp = NULL;
@@ -265,13 +226,7 @@ main (int argc, char **argv)
    *.. validly signed, but allow unsigned PK updates is not set.
    */
   rc = pseries_update_variable (&update_req, &tmp, &tmp_size);
-  if (rc != SV_INVALID_PK_UPDATE)
-    {
-      printf ("Test Case-9 : FAILED with rc = 0x%x\n", rc);
-      goto clean;
-    }
-  else
-    printf ("Test Case-9 : PASSED\n");
+  assert_msg (rc == SV_INVALID_PK_UPDATE, "expected invalid pk update, got rc = %d\n", rc);
 
   memset (&update_req, 0x00, sizeof (update_req_t));
   update_req.label = PK_LABEL;
@@ -288,13 +243,7 @@ main (int argc, char **argv)
   update_req.auth_db.kek_size = KEK_size;
 
   rc = pseries_update_variable (&update_req, &tmp, &tmp_size);
-  if (rc != SV_DELETE_EVERYTHING)
-    {
-      printf ("Test Case-10 : FAILED with rc = 0x%x\n", rc);
-      goto clean;
-    }
-  else
-    printf ("Test Case-10 : PASSED\n");
+  assert_msg (rc == SV_DELETE_EVERYTHING, "expected delete everything, got rc = %d\n", rc);
 
   memset (&update_req, 0x00, sizeof (update_req_t));
   update_req.label = (uint8_t *) "P\0o\0w\0e\0r\0P\0r\0i\0v"
@@ -313,21 +262,14 @@ main (int argc, char **argv)
 
   /* user defined variable signed by PK */
   rc = pseries_update_variable (&update_req, &tmp, &tmp_size);
-  if (rc != SV_SUCCESS &&
-      memcmp (tmp + 8, "private variable data\n", tmp_size - 8) != 0)
-    {
-      printf ("Test Case-11 : FAILED with rc = 0x%x\n", rc);
-      return 0;
-    }
-  else
-    printf ("Test Case-11 : PASSED\n");
-
+  assert_msg (rc == SV_SUCCESS, "expected success, got rc = %d\n", rc);
+  assert (memcmp (tmp + 8, "private variable data\n", tmp_size - 8) == 0);
   libstb_free (tmp);
-
-clean:
 
   libstb_free (KEK);
   libstb_free (dbx);
+
+  printf ("PASS\n");
 
   return 0;
 }
