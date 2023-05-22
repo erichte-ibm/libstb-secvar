@@ -39,7 +39,7 @@ unpack_authenticated_variable (const auth_data_t *auth_data, timestamp_t *timest
   if (auth_data->auth_msg_size < sizeof (auth_info_t))
     {
       prlog (PR_ERR, "Buffer too small for an auth2 header - got %lu bytes.\n",
-             auth_data->auth_msg_size);
+             (unsigned long) auth_data->auth_msg_size);
       return SV_BUF_INSUFFICIENT_DATA;
     }
 
@@ -67,7 +67,8 @@ unpack_authenticated_variable (const auth_data_t *auth_data, timestamp_t *timest
    */
   if (da_length <= sizeof (auth_cert_t))
     {
-      prlog (PR_ERR, "da_length in auth header too short for fixed data - %lu bytes\n", da_length);
+      prlog (PR_ERR, "da_length in auth header too short for fixed data - %lu bytes\n",
+             (unsigned long) da_length);
       return SV_AUTH_SIZE_INVALID;
     }
 
