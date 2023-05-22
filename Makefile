@@ -68,13 +68,15 @@ check: $(LIB_DIR)/libstb-secvar-openssl.a
 	@$(MAKE) -C $(TEST_DIR) check
 
 cppcheck:
-	cppcheck --enable=all --suppress=missingIncludeSystem --force \
-	         -D__BYTE_ORDER__=__LITTLE_ENDIAN__ $(SRCS) $(INCLUDE)
+	cppcheck --enable=all --suppress=missingIncludeSystem --force  \
+	         -D__BYTE_ORDER__=__LITTLE_ENDIAN__ $(SRCS) $(INCLUDE) \
+			 --error-exitcode=1 -q
 	@$(MAKE) -C $(TEST_DIR) cppcheck
 
 cppcheck-be:
 	cppcheck --enable=all --suppress=missingIncludeSystem --force \
-	         -D__BYTE_ORDER__=__BIG_ENDIAN__ $(SRCS) $(INCLUDE)
+	         -D__BYTE_ORDER__=__BIG_ENDIAN__ $(SRCS) $(INCLUDE)   \
+			 --error-exitcode=1 -q
 	@$(MAKE) -C $(TEST_DIR) cppcheck-be
 
 clean:
