@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <log.h>
+#include "test_utils.h"
 
 int
 main (int argc, char **argv)
@@ -27,63 +29,47 @@ main (int argc, char **argv)
   size_t cert_size, merge_size;
   uuid_t owner;
 
-  printf ("\n8 test cases for ESL merge\n\n");
+  libstb_log_level = 0;
+
+  printf ("testing esl merge...");
 
   rc = next_cert_from_esls_buf (one_esl, one_esl_len, &cert, &cert_size, &owner, &tmp);
-  if (rc == SV_SUCCESS && cert != NULL && cert_size == 813)
-    printf ("Test case-1 : PASSED\n");
-  else
-    {
-      printf ("Test case-1 : FAILED with rc = 0x%x\n", rc);
-      return 0;
-    }
+
+  assert_rc (SV_SUCCESS);
+  assert (cert != NULL);
+  assert (cert_size == 813);
 
   rc = next_cert_from_esls_buf (one_esl, one_esl_len, &cert, &cert_size, &owner, &tmp);
-  if (rc == SV_SUCCESS && cert == NULL)
-    printf ("Test case-2 : PASSED\n");
-  else
-    {
-      printf ("Test case-2 : FAILED with rc = 0x%x\n", rc);
-      return 0;
-    }
 
+  assert_rc (SV_SUCCESS);
+  assert (cert == NULL);
+  
   rc = next_cert_from_esls_buf (two_esl, two_esl_len, &cert, &cert_size, &owner, &tmp);
-  if (rc == SV_SUCCESS && cert != NULL && cert_size == 813)
-    printf ("Test case-3 : PASSED\n");
-  else
-    {
-      printf ("Test case-3 : FAILED with rc = 0x%x\n", rc);
-      return 0;
-    }
+  
+  assert_rc (SV_SUCCESS);
+  assert (cert != NULL);
+  assert (cert_size == 813);
 
   cert1 = cert;
   rc = next_cert_from_esls_buf (two_esl, two_esl_len, &cert, &cert_size, &owner, &tmp);
-  if (rc == SV_SUCCESS && cert != NULL && cert_size == 813 && cert > cert1)
-    printf ("Test case-4 : PASSED\n");
-  else
-    {
-      printf ("Test case-4 : FAILED with rc = 0x%x\n", rc);
-      return 0;
-    }
+
+  assert_rc (SV_SUCCESS);
+  assert (cert != NULL);
+  assert (cert_size == 813);
+  assert (cert > cert1);
 
   rc = next_cert_from_esls_buf (two_esl, two_esl_len, &cert, &cert_size, &owner, &tmp);
-  if (rc == SV_SUCCESS && cert == NULL)
-    printf ("Test case-5 : PASSED\n");
-  else
-    {
-      printf ("Test case-5 : FAILED with rc = 0x%x\n", rc);
-      return 0;
-    }
 
+  assert_rc (SV_SUCCESS);
+  assert (cert == NULL);
+  
   rc = merge_esls (one_esl, one_esl_len, kek_esl, kek_esl_len, NULL, &merge_size);
-  if (rc == SV_SUCCESS && cert == NULL && merge_size > one_esl_len && merge_size > kek_esl_len)
-    printf ("Test case-6 : PASSED\n");
-  else
-    {
-      printf ("Test case-6 : FAILED with rc = 0x%x\n", rc);
-      return 0;
-    }
 
+  assert_rc (SV_SUCCESS);
+  assert (cert == NULL);
+  assert (merge_size > one_esl_len);
+  assert (merge_size > kek_esl_len);
+  
 #ifdef DO_NOT_MERGE_CERTIFICATE_ESLS
   assert (merge_size == one_esl_len + kek_esl_len);
 #else
@@ -92,6 +78,7 @@ main (int argc, char **argv)
   merge = malloc (merge_size);
   assert (merge);
   rc = merge_esls (one_esl, one_esl_len, kek_esl, kek_esl_len, merge, &merge_size);
+  assert_rc (SV_SUCCESS);
   assert (merge_size > one_esl_len && merge_size > kek_esl_len);
 #ifdef DO_NOT_MERGE_CERTIFICATE_ESLS
   assert (merge_size == one_esl_len + kek_esl_len);
@@ -106,23 +93,17 @@ main (int argc, char **argv)
 
   rc = merge_esls (dbx_256_a_esl, dbx_256_a_esl_len, dbx_256_b_esl,
                    dbx_256_b_esl_len, NULL, &merge_size);
-  if (rc == SV_SUCCESS && merge_size == dbx_256_a_esl_len + dbx_256_b_esl_len - sizeof (sv_esl_t))
-    printf ("Test case-7 : PASSED\n");
-  else
-    {
-      printf ("Test case-7 : FAILED with rc = 0x%x\n", rc);
-      return 0;
-    }
+
+  assert_rc (SV_SUCCESS);
+  assert(merge_size == dbx_256_a_esl_len + dbx_256_b_esl_len - sizeof (sv_esl_t));
 
   rc = merge_esls (dbx_256_a_esl, dbx_256_a_esl_len, dbx_512_b_esl,
                    dbx_512_b_esl_len, NULL, &merge_size);
-  if (rc == SV_SUCCESS && merge_size == dbx_256_a_esl_len + dbx_512_b_esl_len)
-    printf ("Test case-8 : PASSED\n");
-  else
-    {
-      printf ("Test case-8 : FAILED with rc = 0x%x\n", rc);
-      return 0;
-    }
+
+  assert_rc (SV_SUCCESS);
+  assert(merge_size == dbx_256_a_esl_len + dbx_512_b_esl_len);
+
+  printf("PASS\n");
 
   return 0;
 }

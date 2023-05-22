@@ -16,6 +16,8 @@
 #include "libstb-secvar-errors.h"
 #include <stdio.h>
 #include <assert.h>
+#include <log.h>
+#include "test_utils.h"
 
 static const uint16_t *PK_NAME = (const uint16_t *)"P\0K\0\0\0";
 static const uint16_t *DB_NAME = (const uint16_t *)"d\0b\0\0\0";
@@ -33,7 +35,9 @@ main (int argc, char **argv)
   size_t new_data_size, new_data2_size;
   sv_flag_t verified_flag;
 
-  printf ("\n9 test Cases for apply variable update\n\n");
+  libstb_log_level = 0;
+
+  printf ("testing variable update...");
 
   auth_data.auth_msg = svc_db_by_PK_auth;
   auth_data.auth_msg_size = svc_db_by_PK_auth_len;
@@ -45,14 +49,12 @@ main (int argc, char **argv)
 
   rc = unpack_authenticated_variable (&auth_data, &timestamp, &cert,
                                       &cert_size, &data, &data_size);
-  if (rc == SV_SUCCESS)
-    rc = verify_signature (&auth_data, &timestamp, cert, cert_size, data, data_size,
-                           &verified_flag);
+  assert_rc (SV_SUCCESS);
 
-  if (rc != SV_SUCCESS)
-    printf ("Test Case-1 : FAILED with rc = 0x%x\n", rc);
-  else
-    printf ("Test Case-1 : PASSED\n");
+  rc = verify_signature (&auth_data, &timestamp, cert, cert_size, data, data_size,
+                         &verified_flag);
+
+  assert_rc (SV_SUCCESS);
 
   memset (&auth_data, 0x00, sizeof (auth_data_t));
   auth_data.auth_msg = svc_dbx_by_KEK_auth;
@@ -65,24 +67,19 @@ main (int argc, char **argv)
 
   rc = unpack_authenticated_variable (&auth_data, &timestamp, &cert,
                                       &cert_size, &data, &data_size);
-  if (rc == SV_SUCCESS)
-    rc = verify_signature (&auth_data, &timestamp, cert, cert_size, data, data_size,
-                           &verified_flag);
+  assert_rc (SV_SUCCESS);
+  
+  rc = verify_signature (&auth_data, &timestamp, cert, cert_size, data, data_size,
+                         &verified_flag);
 
-  if (rc != SV_FAILED_TO_VERIFY_SIGNATURE)
-    printf ("Test Case-2 : FAILED with rc = 0x%x\n", rc);
-  else
-    printf ("Test Case-2 : PASSED\n");
+  assert_rc (SV_FAILED_TO_VERIFY_SIGNATURE);
 
   auth_data.auth_db.kek = kek_esl;
   auth_data.auth_db.kek_size = kek_esl_len;
 
   rc = verify_signature (&auth_data, &timestamp, cert, cert_size, data, data_size,
                          &verified_flag);
-  if (rc != SV_SUCCESS)
-    printf ("Test Case-3 : FAILED with rc = 0x%x\n", rc);
-  else
-    printf ("Test Case-3 : PASSED\n");
+  assert_rc (SV_SUCCESS);
 
   memset (&auth_data, 0x00, sizeof (auth_data_t));
   auth_data.auth_msg = delete_pk_sbvs_auth;
@@ -97,14 +94,12 @@ main (int argc, char **argv)
 
   rc = unpack_authenticated_variable (&auth_data, &timestamp, &cert,
                                       &cert_size, &data, &data_size);
-  if (rc == SV_SUCCESS)
-    rc = verify_signature (&auth_data, &timestamp, cert, cert_size, data, data_size,
-                           &verified_flag);
+  assert_rc (SV_SUCCESS);
+  
+  rc = verify_signature (&auth_data, &timestamp, cert, cert_size, data, data_size,
+                         &verified_flag);
 
-  if (rc != SV_SUCCESS)
-    printf ("Test Case-4 : FAILED with rc = 0x%x\n", rc);
-  else
-    printf ("Test Case-4 : PASSED\n");
+  assert_rc (SV_SUCCESS);
 
   memset (&auth_data, 0x00, sizeof (auth_data_t));
   auth_data.auth_msg = delete_pk_sesl_auth;
@@ -119,14 +114,12 @@ main (int argc, char **argv)
 
   rc = unpack_authenticated_variable (&auth_data, &timestamp, &cert,
                                       &cert_size, &data, &data_size);
-  if (rc == SV_SUCCESS)
-    rc = verify_signature (&auth_data, &timestamp, cert, cert_size, data, data_size,
-                           &verified_flag);
+  assert_rc (SV_SUCCESS);
+  
+  rc = verify_signature (&auth_data, &timestamp, cert, cert_size, data, data_size,
+                         &verified_flag);
 
-  if (rc != SV_SUCCESS)
-    printf ("Test Case-5 : FAILED with rc = 0x%x\n", rc);
-  else
-    printf ("Test Case-5 : PASSED\n");
+  assert_rc (SV_SUCCESS);
 
   memset (&auth_data, 0x00, sizeof (auth_data_t));
   auth_data.name = (uint16_t *) DB_NAME;
@@ -140,10 +133,7 @@ main (int argc, char **argv)
 
   rc = pseries_apply_update (&auth_data, &new_data, &new_data_size, &new_timestamp,
                              &verified_flag);
-  if (rc != SV_SUCCESS)
-    printf ("Test Case-6 : FAILED with rc = 0x%x\n", rc);
-  else
-    printf ("Test Case-6 : PASSED\n");
+  assert_rc (SV_SUCCESS);
 
   memset (&auth_data, 0x00, sizeof (auth_data_t));
   auth_data.name = (uint16_t *) DBX_NAME;
@@ -157,6 +147,7 @@ main (int argc, char **argv)
 
   rc = unpack_authenticated_variable (&auth_data, &timestamp, &cert,
                                       &cert_size, &data, &data_size);
+  assert (rc == SV_SUCCESS);
   assert (new_data_size == data_size);
   assert (memcmp (new_data, data, data_size) == 0);
   assert (memcmp (&timestamp, &new_timestamp, sizeof (timestamp_t)) == 0);
@@ -164,11 +155,7 @@ main (int argc, char **argv)
   /* attempt to apply to the wrong variable - sig mismatch */
   rc = pseries_apply_update (&auth_data, &new_data, &new_data_size, &new_timestamp,
                              &verified_flag);
-  if (rc != SV_FAILED_TO_VERIFY_SIGNATURE)
-    printf ("Test Case-7 : FAILED with rc = 0x%x\n", rc);
-  else
-    printf ("Test Case-7 : PASSED\n");
-
+  assert_rc (SV_FAILED_TO_VERIFY_SIGNATURE);
 
   memset (&auth_data, 0x00, sizeof (auth_data_t));
   auth_data.name = (uint16_t *) DB_NAME;
@@ -183,10 +170,7 @@ main (int argc, char **argv)
   /* truncated update */
   rc = pseries_apply_update (&auth_data, &new_data, &new_data_size, &new_timestamp,
                              &verified_flag);
-  if (rc != SV_AUTH_SIZE_INVALID)
-    printf ("Test Case-8 : FAILED with rc = 0x%x\n", rc);
-  else
-    printf ("Test Case-8 : PASSED\n");
+  assert_rc (SV_AUTH_SIZE_INVALID);
 
   memset (&auth_data, 0x00, sizeof (auth_data_t));
   auth_data.name = (uint16_t *) DB_NAME;
@@ -204,13 +188,12 @@ main (int argc, char **argv)
   /* not in future */
   rc = pseries_apply_update (&auth_data, &new_data2, &new_data2_size, &new_timestamp2,
                              &verified_flag);
-  if (rc != SV_TIMESTAMP_IN_PAST)
-    printf ("Test Case-9 : FAILED with rc = 0x%x\n", rc);
-  else
-    printf ("Test Case-9 : PASSED\n");
+  assert_rc (SV_TIMESTAMP_IN_PAST);
 
   /* but permitted if we skip authentication */
   libstb_free (new_data);
 
+  printf("PASS\n");
+  
   return 0;
 }
