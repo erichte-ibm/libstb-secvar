@@ -2,6 +2,8 @@
 # Copyright 2023 IBM Corp.
 
 CC = gcc
+AR = ar
+LD = gcc
 _CFLAGS = -Wall -Werror -MMD -ggdb3 -fPIC
 CFLAGS =
 LDFLAGS =
@@ -26,12 +28,6 @@ ifeq ($(strip $(CRYPTO_READ_ONLY)), 0)
   _CFLAGS += -DSECVAR_CRYPTO_WRITE_FUNC
 endif
 
-STATIC_LIB = 0
-ifeq ($(strip $(STATIC_LIB)), 1)
-  LD = ar -rcs
-else
-  LD = gcc
-endif
 
 SRCS = $(SRC_DIR)/esl.c \
        $(SRC_DIR)/authentication_2.c \
@@ -47,7 +43,7 @@ OPENSSL_OBJS = $(SRCS:.c=.openssl.o) $(OPENSSL_SRCS:.c=.openssl.o)
 _CFLAGS += $(CFLAGS) $(INCLUDE)
 _LDFLAGS += $(LDFLAGS)
 
-all: libstb-secvar-openssl
+all: $(LIB_DIR)/libstb-secvar-openssl.a $(LIB_DIR)/libstb-secvar-openssl.so
 
 -include $(OPENSSL_OBJS:.o=.d)
 
@@ -56,20 +52,16 @@ all: libstb-secvar-openssl
 %.openssl.o: %.c
 	$(CC) $(_CFLAGS) $< -o $@ -c
 
-libstb-secvar-openssl: $(OPENSSL_OBJS)
+$(LIB_DIR)/libstb-secvar-openssl.a: $(OPENSSL_OBJS)
 	@mkdir -p $(LIB_DIR)
-ifeq ($(strip $(STATIC_LIB)), 1)
-	$(LD) $(LIB_DIR)/$@.a $^ $(_LDFLAGS)
-else
-	$(LD) $(_LDFLAGS) -shared $^ -o $(LIB_DIR)/$@.so
-endif
-	@echo "libstb-secvar Build successful!"
+	$(AR) -rcs $@ $^ $(_LDFLAGS)
 
-test:
-	@$(MAKE) -C $(TEST_DIR) STATIC_LIB=$(STATIC_LIB)
+$(LIB_DIR)/libstb-secvar-openssl.so: $(OPENSSL_OBJS)
+	@mkdir -p $(LIB_DIR)
+	$(LD) $(_LDFLAGS) -shared $^ -o $@
 
-check: test
-	@$(MAKE) -C $(TEST_DIR) check STATIC_LIB=$(STATIC_LIB)
+check: $(LIB_DIR)/libstb-secvar-openssl.so test
+	@$(MAKE) -C $(TEST_DIR) check
 
 cppcheck:
 	cppcheck --enable=all --suppress=missingIncludeSystem --force \
@@ -86,4 +78,4 @@ clean:
 	find $(SRC_DIR) -name "*.[od]" -delete
 	rm -rf $(LIB_DIR)
 
-.PHONY: all test check cppcheck cppcheck-be clean
+.PHONY: all check cppcheck cppcheck-be clean
