@@ -27,7 +27,7 @@ all: $(BINS)
 check: $(patsubst test_%.c,%-check,$(TEST_SRCS))
 
 %-check: $(BIN_DIR)/test_%
-	$<
+	@$<
 
 $(BIN_DIR)/test_%: test_%.c $(LIB_DIR)/libstb-secvar-openssl.a
 	@mkdir -p $(BIN_DIR)
