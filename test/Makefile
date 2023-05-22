@@ -42,7 +42,6 @@ $(BIN_DIR)/test_%: test_%.c
 	$(CC) -o $@ $(_LDFLAGS) $(_CFLAGS) $^
 
 clean:
-	find ./ -name "*.[od]" -delete
 	rm -rf $(BIN_DIR)
 
 .PHONY: all check cppcheck cppecheck-be clean
