@@ -31,7 +31,7 @@ check: $(patsubst test_%.c,%-check,$(TEST_SRCS))
 
 $(BIN_DIR)/test_%: test_%.c $(LIB_DIR)/libstb-secvar-openssl.a
 	@mkdir -p $(BIN_DIR)
-	$(CC) -o $@ $(_LDFLAGS) $(_CFLAGS) $^
+	$(CC) -o $@ $^ $(_LDFLAGS) $(_CFLAGS)
 
 cppcheck:
 	cppcheck --enable=all --suppress=missingIncludeSystem --force \
