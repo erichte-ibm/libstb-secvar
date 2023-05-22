@@ -34,6 +34,7 @@ SRCS = esl.c \
        update.c \
        pseries.c \
        crypto_util.c \
+       log.c \
        phyp.c
 
 SRCS += crypto_openssl.c
