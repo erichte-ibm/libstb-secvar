@@ -142,7 +142,8 @@ convert_to_ucs2 (const update_req_t *update_req, uint16_t **name)
 {
   if (update_req->label_size % 2 != 0)
     {
-      prlog (PR_ERR, "label has an odd number of bytes: %lu\n", update_req->label_size);
+      prlog (PR_ERR, "label has an odd number of bytes: %lu\n",
+             (unsigned long) update_req->label_size);
       return SV_LABEL_IS_NOT_WIDE_CHARACTERS;
     }
 
