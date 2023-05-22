@@ -25,9 +25,13 @@ BINS = $(patsubst %.c,$(BIN_DIR)/%,$(TEST_SRCS))
 
 all: $(BINS)
 check: $(patsubst test_%.c,%-check,$(TEST_SRCS))
+memcheck: $(patsubst test_%.c,%-memcheck,$(TEST_SRCS))
 
 %-check: $(BIN_DIR)/test_%
 	@$<
+
+%-memcheck: $(BIN_DIR)/test_%
+	@valgrind --leak-check=full --error-exitcode=1 -q $<
 
 $(BIN_DIR)/test_%: test_%.c $(LIB_DIR)/libstb-secvar-openssl.a
 	@mkdir -p $(BIN_DIR)
