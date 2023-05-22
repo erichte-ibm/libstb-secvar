@@ -18,10 +18,12 @@
 #define PR_INSANE 9
 #define MAXLEVEL PR_INSANE
 
+extern int libstb_log_level;
+
 #define prlog(l, ...)                                             \
   do                                                              \
     {                                                             \
-      if (l <= MAXLEVEL)                                          \
+      if (l <= libstb_log_level)                                        \
         fprintf ((l <= PR_ERR) ? stderr : stdout, ##__VA_ARGS__); \
     }                                                             \
   while (0)
