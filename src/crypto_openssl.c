@@ -546,7 +546,7 @@ pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
   EVP_PKEY *evp_pkey = NULL;
   const EVP_MD *evp_md = NULL;
   crypto_x509_t *x509 = NULL;
-  size_t pkcs7_out_len;
+  long pkcs7_out_len;
   unsigned char *key = NULL, *keyTmp, *crt = NULL, *out_bio_der = NULL;
   char *unnecessary_hdr = NULL, *unnecessary_name = NULL;
   long int keySize, crtSize;
