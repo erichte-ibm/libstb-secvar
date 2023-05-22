@@ -28,35 +28,33 @@ ifeq ($(strip $(CRYPTO_READ_ONLY)), 0)
   _CFLAGS += -DSECVAR_CRYPTO_WRITE_FUNC
 endif
 
+SRCS = esl.c \
+       authentication_2.c \
+       update.c \
+       pseries.c \
+       crypto_util.c \
+       phyp.c
 
-SRCS = $(SRC_DIR)/esl.c \
-       $(SRC_DIR)/authentication_2.c \
-       $(SRC_DIR)/update.c \
-       $(SRC_DIR)/pseries.c \
-       $(SRC_DIR)/phyp.c
+SRCS += crypto_openssl.c
 
-OPENSSL_SRCS = $(SRCS) \
-               $(SRC_DIR)/crypto_openssl.c \
-               $(SRC_DIR)/crypto_util.c
+SRCS := $(addprefix $(SRC_DIR)/,$(SRCS))
 
-OPENSSL_OBJS = $(SRCS:.c=.openssl.o) $(OPENSSL_SRCS:.c=.openssl.o)
+OBJS = $(SRCS:.c=.o)
 _CFLAGS += $(CFLAGS) $(INCLUDE)
 _LDFLAGS += $(LDFLAGS)
 
 all: $(LIB_DIR)/libstb-secvar-openssl.a $(LIB_DIR)/libstb-secvar-openssl.so
 
--include $(OPENSSL_OBJS:.o=.d)
+-include $(OBJS:.o=.d)
 
 %.o: %.c
 	$(CC) $(_CFLAGS) $< -o $@ -c
-%.openssl.o: %.c
-	$(CC) $(_CFLAGS) $< -o $@ -c
 
-$(LIB_DIR)/libstb-secvar-openssl.a: $(OPENSSL_OBJS)
+$(LIB_DIR)/libstb-secvar-openssl.a: $(OBJS)
 	@mkdir -p $(LIB_DIR)
 	$(AR) -rcs $@ $^ $(_LDFLAGS)
 
-$(LIB_DIR)/libstb-secvar-openssl.so: $(OPENSSL_OBJS)
+$(LIB_DIR)/libstb-secvar-openssl.so: $(OBJS)
 	@mkdir -p $(LIB_DIR)
 	$(LD) $(_LDFLAGS) -shared $^ -o $@
 
