@@ -70,17 +70,22 @@ check: $(LIB_DIR)/libstb-secvar-openssl.a
 memcheck: $(LIB_DIR)/libstb-secvar-openssl.a
 	@$(MAKE) -C $(TEST_DIR) memcheck
 
+TEST_SRCS = $(wildcard test/*.c)
+# variableScope: avoid reducing variable scope to maintain C compatibility
+# missingInclude: TODO: ideally rework all includes to make this unnecessary
+CPPCHECK_ARGS = --enable=all --force            \
+                --suppress=variableScope        \
+                --suppress=missingInclude       \
+                --error-exitcode=1 -q
 cppcheck:
-	cppcheck --enable=all --suppress=missingIncludeSystem --force  \
-	         -D__BYTE_ORDER__=__LITTLE_ENDIAN__ $(SRCS) $(INCLUDE) \
-			 --error-exitcode=1 -q
-	@$(MAKE) -C $(TEST_DIR) cppcheck
+	cppcheck $(CPPCHECK_ARGS)                    \
+             -D__BYTE_ORDER__=__LITTLE_ENDIAN__  \
+             $(INCLUDE) $(SRCS) $(TEST_SRCS)
 
 cppcheck-be:
-	cppcheck --enable=all --suppress=missingIncludeSystem --force \
-	         -D__BYTE_ORDER__=__BIG_ENDIAN__ $(SRCS) $(INCLUDE)   \
-			 --error-exitcode=1 -q
-	@$(MAKE) -C $(TEST_DIR) cppcheck-be
+	cppcheck $(CPPCHECK_ARGS)                \
+             -D__BYTE_ORDER__=__BIG_ENDIAN__ \
+             $(INCLUDE) $(SRCS) $(TEST_SRCS)
 
 clean:
 	@$(MAKE) -C $(TEST_DIR) clean

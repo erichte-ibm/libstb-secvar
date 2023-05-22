@@ -37,16 +37,6 @@ $(BIN_DIR)/test_%: test_%.c $(LIB_DIR)/libstb-secvar-openssl.a
 	@mkdir -p $(BIN_DIR)
 	$(CC) -o $@ $^ $(_LDFLAGS) $(_CFLAGS)
 
-cppcheck:
-	cppcheck --enable=all --suppress=missingIncludeSystem --force       \
-	         -D__BYTE_ORDER__=__LITTLE_ENDIAN__ $(TEST_SRCS) $(INCLUDE) \
-			 --error-exitcode=1 -q
-
-cppcheck-be:
-	cppcheck --enable=all --suppress=missingIncludeSystem --force    \
-	         -D__BYTE_ORDER__=__BIG_ENDIAN__ $(TEST_SRCS) $(INCLUDE) \
-			 --error-exitcode=1 -q
-
 clean:
 	rm -rf $(BIN_DIR)
 
