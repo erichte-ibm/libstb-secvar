@@ -91,7 +91,7 @@ next_esl_from_buffer (const uint8_t *buf, size_t buf_size, const uint8_t **esl,
   if (left < sizeof (sv_esl_t))
     {
       prlog (PR_ERR, "Not enough space left for an ESL when unpacking buffer: %lu bytes remain\n",
-             left);
+             (unsigned long) left);
       return SV_BUF_INSUFFICIENT_DATA;
     }
 
@@ -102,13 +102,13 @@ next_esl_from_buffer (const uint8_t *buf, size_t buf_size, const uint8_t **esl,
   if (claimed_size < sizeof (sv_esl_t))
     {
       prlog (PR_ERR, "ESL's claimed size is too small for the fixed contents: %lu bytes\n",
-             claimed_size);
+             (unsigned long) claimed_size);
       return SV_ESL_SIZE_INVALID;
     }
   else if (claimed_size > left)
     {
       prlog (PR_ERR, "ESL's claimed size is bigger than the data left in the buffer: %lu vs %lu\n",
-             claimed_size, left);
+             (unsigned long) claimed_size, (unsigned long) left);
       return SV_BUF_INSUFFICIENT_DATA;
     }
 
@@ -153,13 +153,13 @@ next_esl_from_buffer (const uint8_t *buf, size_t buf_size, const uint8_t **esl,
   if (claimed_size < sizeof (sv_esl_t))
     {
       prlog (PR_ERR, "ESL's claimed size is too small for the fixed contents: %lu bytes\n",
-             claimed_size);
+             (unsigned long) claimed_size);
       return SV_ESL_SIZE_INVALID;
     }
   else if (claimed_size > left)
     {
       prlog (PR_ERR, "ESL's claimed size is bigger than the data left in the buffer: %lu vs %lu\n",
-             claimed_size, left);
+             (unsigned long) claimed_size, (unsigned long) left);
       return SV_BUF_INSUFFICIENT_DATA;
     }
 
