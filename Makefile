@@ -9,6 +9,7 @@ CFLAGS =
 LDFLAGS =
 
 SRC_DIR = ./src
+OBJ_DIR = ./obj
 LIB_DIR = ./lib
 TEST_DIR = ./test
 
@@ -39,7 +40,7 @@ SRCS += crypto_openssl.c
 
 SRCS := $(addprefix $(SRC_DIR)/,$(SRCS))
 
-OBJS = $(SRCS:.c=.o)
+OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 _CFLAGS += $(CFLAGS) $(INCLUDE)
 _LDFLAGS += $(LDFLAGS)
 
@@ -47,7 +48,8 @@ all: $(LIB_DIR)/libstb-secvar-openssl.a $(LIB_DIR)/libstb-secvar-openssl.so
 
 -include $(OBJS:.o=.d)
 
-%.o: %.c
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(OBJ_DIR)
 	$(CC) $(_CFLAGS) $< -o $@ -c
 
 $(LIB_DIR)/libstb-secvar-openssl.a: $(OBJS)
@@ -73,7 +75,6 @@ cppcheck-be:
 
 clean:
 	@$(MAKE) -C $(TEST_DIR) clean
-	find $(SRC_DIR) -name "*.[od]" -delete
-	rm -rf $(LIB_DIR)
+	rm -rf $(OBJ_DIR) $(LIB_DIR)
 
 .PHONY: all check cppcheck cppcheck-be clean
