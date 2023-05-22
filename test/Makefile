@@ -29,6 +29,10 @@ check: $(patsubst test_%.c,%-check,$(TEST_SRCS))
 %-check: $(BIN_DIR)/test_%
 	@$<
 
+$(BIN_DIR)/test_%: test_%.c $(LIB_DIR)/libstb-secvar-openssl.a
+	@mkdir -p $(BIN_DIR)
+	$(CC) -o $@ $(_LDFLAGS) $(_CFLAGS) $^
+
 cppcheck:
 	cppcheck --enable=all --suppress=missingIncludeSystem --force \
 	         -D__BYTE_ORDER__=__LITTLE_ENDIAN__ $(TEST_SRCS) $(INCLUDE)
@@ -36,10 +40,6 @@ cppcheck:
 cppcheck-be:
 	cppcheck --enable=all --suppress=missingIncludeSystem --force \
 	         -D__BYTE_ORDER__=__BIG_ENDIAN__ $(TEST_SRCS) $(INCLUDE)
-
-$(BIN_DIR)/test_%: test_%.c $(LIB_DIR)/libstb-secvar-openssl.a
-	@mkdir -p $(BIN_DIR)
-	$(CC) -o $@ $(_LDFLAGS) $(_CFLAGS) $^
 
 clean:
 	rm -rf $(BIN_DIR)
