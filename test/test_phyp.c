@@ -23,6 +23,8 @@
 #include "data/wipe_by_PK_auth.h"
 #include "data/priv_auth.h"
 #include "libstb-secvar-errors.h"
+#include <log.h>
+#include "test_utils.h"
 
 #define PK_LABEL (uint8_t *)"P\0K\0"
 #define KEK_LABEL (uint8_t *)"K\0E\0K\0"
@@ -37,17 +39,17 @@ main (int argc, char **argv)
   sv_err_t rc;
   uint64_t log_data;
 
-  printf ("\n11 test cases for variable update request via phyp\n\n");
+  libstb_log_level = 0;
+
+  printf ("testing phyp variable update...");
 
   /* load a KEK */
   rc = update_var_from_auth (KEK_LABEL, 6, KEK_by_PK_auth, KEK_by_PK_auth_len,
                              NULL, 0, false, false, PK_sv, PK_sv_len, NULL, 0,
                              &KEK, &KEK_size, &log_data);
-  printf ("1 log_data: 0x%lx\n", log_data);
-  if (rc)
-    printf ("rc = %x\n", rc);
-  assert (rc == 0);
-
+  
+  // printf ("1 log_data: 0x%lx\n", log_data);
+  assert_rc (SV_SUCCESS);
   assert (KEK_size == kek_esl_len + 8); /* sizeof(pks_signed_var) == 8 */
   assert (memcmp (KEK + 8, kek_esl, kek_esl_len) == 0);
 
@@ -55,20 +57,17 @@ main (int argc, char **argv)
   rc = update_var_from_auth (DB_LABEL, 4, db_by_KEK_auth, db_by_KEK_auth_len,
                              NULL, 0, false, false, PK_sv, PK_sv_len, KEK,
                              KEK_size, &db, &db_size, &log_data);
-  printf ("2 log_data: 0x%lx\n", log_data);
-  if (rc)
-    printf ("rc = %x\n", rc);
-  assert (rc == 0);
+  
+  // printf ("2 log_data: 0x%lx\n", log_data);
+  assert_rc (SV_SUCCESS);
 
   /* this update should fail as being too old */
   rc = update_var_from_auth (DB_LABEL, 4, svc_db_by_PK_auth, svc_db_by_PK_auth_len,
                              db, db_size, false, false, PK_sv, PK_sv_len, KEK,
                              KEK_size, &tmp, &tmp_size, &log_data);
-  printf ("3 log_data: 0x%lx\n", log_data);
-  if (rc != SV_TIMESTAMP_IN_PAST)
-    printf ("rc = %x\n", rc);
-
-  assert (rc == SV_TIMESTAMP_IN_PAST);
+  
+  // printf ("3 log_data: 0x%lx\n", log_data);
+  assert_rc (SV_TIMESTAMP_IN_PAST);
   assert (tmp == NULL);
   assert (tmp_size == 0);
   libstb_free (db);
@@ -77,10 +76,9 @@ main (int argc, char **argv)
   rc = update_var_from_auth (DBX_LABEL, 6, dbx_1_auth, dbx_1_auth_len, NULL, 0,
                              false, false, PK_sv, PK_sv_len, KEK, KEK_size,
                              &dbx, &dbx_size, &log_data);
-  printf ("4 log_data: 0x%lx\n", log_data);
-  if (rc)
-    printf ("rc = %x\n", rc);
-  assert (rc == 0);
+  
+  // printf ("4 log_data: 0x%lx\n", log_data);
+  assert_rc (SV_SUCCESS);
   assert (dbx_size == dbx_256_a_esl_len + 8);
   assert (memcmp (dbx + 8, dbx_256_a_esl, dbx_256_a_esl_len) == 0);
 
@@ -88,10 +86,9 @@ main (int argc, char **argv)
   rc = update_var_from_auth (DBX_LABEL, 6, dbx_2_auth, dbx_2_auth_len, dbx,
                              dbx_size, false, true, PK_sv, PK_sv_len, KEK,
                              KEK_size, &tmp, &tmp_size, &log_data);
-  printf ("5 log_data: 0x%lx\n", log_data);
-  if (rc)
-    printf ("rc = %x\n", rc);
-  assert (rc == 0);
+  
+  // printf ("5 log_data: 0x%lx\n", log_data);
+  assert_rc (SV_SUCCESS);
   assert (tmp_size == dbx_size + dbx_512_b_esl_len);
   assert (memcmp (tmp + 8 + dbx_256_a_esl_len, dbx_512_b_esl, dbx_512_b_esl_len) == 0);
   libstb_free (dbx);
@@ -107,20 +104,18 @@ main (int argc, char **argv)
   rc = update_var_from_auth (KEK_LABEL, 6, KEK_by_PK_auth, KEK_by_PK_auth_len,
                              KEK, KEK_size, true, false, PK_sv, PK_sv_len, KEK,
                              KEK_size, &tmp, &tmp_size, &log_data);
-  printf ("6 log_data: 0x%lx\n", log_data);
-  if (rc != SV_TIMESTAMP_IN_PAST)
-    printf ("rc = %x\n", rc);
-  assert (rc == SV_TIMESTAMP_IN_PAST);
+
+  // printf ("6 log_data: 0x%lx\n", log_data);
+  assert_rc (SV_TIMESTAMP_IN_PAST);
   assert (tmp == NULL);
 
   /* try an otherwise bad PK update with auPu */
   rc = update_var_from_auth (PK_LABEL, 4, KEK_by_PK_auth, KEK_by_PK_auth_len,
                              PK_sv, PK_sv_len, true, false, PK_sv, PK_sv_len,
                              KEK, KEK_size, &tmp, &tmp_size, &log_data);
-  printf ("7 log_data: 0x%lx\n", log_data);
-  if (rc)
-    printf ("rc = %x\n", rc);
-  assert (rc == 0);
+
+  // printf ("7 log_data: 0x%lx\n", log_data);
+  assert_rc (SV_SUCCESS);
   assert (tmp_size == KEK_size);
   assert (memcmp (tmp, KEK, KEK_size) == 0);
   libstb_free (tmp);
@@ -135,28 +130,25 @@ main (int argc, char **argv)
   rc = update_var_from_auth (PK_LABEL, 4, wipe_by_PK_auth + APPEND_HEADER_LEN, wipe_by_PK_auth_len,
                              PK_sv, PK_sv_len, false, false, PK_sv, PK_sv_len,
                              KEK, KEK_size, &tmp, &tmp_size, &log_data);
-  printf ("8 log_data: 0x%lx\n", log_data);
-  if (rc != SV_INVALID_PK_UPDATE)
-    printf ("rc = %x\n", rc);
-  assert (rc == SV_INVALID_PK_UPDATE);
+  
+  // printf ("8 log_data: 0x%lx\n", log_data);
+  assert_rc (SV_INVALID_PK_UPDATE);
 
   rc = update_var_from_auth (PK_LABEL, 4, wipe_by_PK_auth + APPEND_HEADER_LEN, wipe_by_PK_auth_len,
                              PK_sv, PK_sv_len, true, false, PK_sv, PK_sv_len,
                              KEK, KEK_size, &tmp, &tmp_size, &log_data);
-  printf ("9 log_data: 0x%lx\n", log_data);
-  if (rc != SV_DELETE_EVERYTHING)
-    printf ("rc = %x\n", rc);
-  assert (rc == SV_DELETE_EVERYTHING);
+
+  // printf ("9 log_data: 0x%lx\n", log_data);
+  assert_rc (SV_DELETE_EVERYTHING);
 
   /* user defined variable signed by PK */
   rc = update_var_from_auth ((const uint8_t *) "P\0o\0w\0e\0r\0P\0r\0i\0v\0a\0t"
                                                "\0e\0V\0a\0r\0",
                              30, priv_auth, priv_auth_len, NULL, 0, false, false, PK_sv,
                              PK_sv_len, KEK, KEK_size, &tmp, &tmp_size, &log_data);
-  printf ("10 log_data: 0x%lx\n", log_data);
-  if (rc)
-    printf ("rc = %x\n", rc);
-  assert (rc == 0);
+
+  // printf ("10 log_data: 0x%lx\n", log_data);
+  assert_rc (SV_SUCCESS);
   assert (memcmp (tmp + 8, "private variable data\n", tmp_size - 8) == 0);
   libstb_free (tmp);
 
@@ -165,13 +157,14 @@ main (int argc, char **argv)
                                                "\0e\0V\0a\0r",
                              29, priv_auth, priv_auth_len, NULL, 0, false, false, PK_sv,
                              PK_sv_len, KEK, KEK_size, &tmp, &tmp_size, &log_data);
-  printf ("11 log_data: 0x%lx\n", log_data);
-  if (rc != SV_LABEL_IS_NOT_WIDE_CHARACTERS)
-    printf ("rc = %x\n", rc);
-  assert (rc == SV_LABEL_IS_NOT_WIDE_CHARACTERS);
+
+  // printf ("11 log_data: 0x%lx\n", log_data);
+  assert_rc (SV_LABEL_IS_NOT_WIDE_CHARACTERS);
 
   libstb_free (KEK);
   libstb_free (dbx);
+
+  printf("PASS\n");
 
   return 0;
 }
