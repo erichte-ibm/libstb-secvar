@@ -18,7 +18,7 @@ TEST_SRCS = test_esl.c \
             test_pseries.c \
             test_phyp.c
 
-_LDFLAGS = $(LDFLAGS) -lcrypto -lstb-secvar-openssl -L$(LIB_DIR)
+_LDFLAGS = $(LDFLAGS) -lcrypto
 _CFLAGS += $(CFLAGS) $(INCLUDE)
 
 BINS = $(patsubst %.c,$(BIN_DIR)/%,$(TEST_SRCS))
@@ -27,7 +27,7 @@ all: $(BINS)
 check: $(patsubst test_%.c,%-check,$(TEST_SRCS))
 
 %-check: $(BIN_DIR)/test_%
-	LD_LIBRARY_PATH=$(LIB_DIR) $<
+	$<
 
 cppcheck:
 	cppcheck --enable=all --suppress=missingIncludeSystem --force \
@@ -37,7 +37,7 @@ cppcheck-be:
 	cppcheck --enable=all --suppress=missingIncludeSystem --force \
 	         -D__BYTE_ORDER__=__BIG_ENDIAN__ $(TEST_SRCS) $(INCLUDE)
 
-$(BIN_DIR)/test_%: test_%.c
+$(BIN_DIR)/test_%: test_%.c $(LIB_DIR)/libstb-secvar-openssl.a
 	@mkdir -p $(BIN_DIR)
 	$(CC) -o $@ $(_LDFLAGS) $(_CFLAGS) $^
 
