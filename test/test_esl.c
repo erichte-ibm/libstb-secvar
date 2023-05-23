@@ -7,6 +7,11 @@
 #include "data/one_esl.h"
 #include "data/kek_esl.h"
 #include "data/two_esl.h"
+#include "data/too_small.h"
+#include "data/too_big.h"
+#include "data/sig_too_large.h"
+#include "data/sighdr_too_large.h"
+#include "data/zero_sig.h"
 #include "data/dbx_256_a_esl.h"
 #include "data/dbx_256_b_esl.h"
 #include "data/dbx_512_a_esl.h"
@@ -28,11 +33,84 @@ main (int argc, char **argv)
   uint8_t *merge;
   size_t cert_size, merge_size;
   uuid_t owner;
+  uint8_t tmp_two_esl[sizeof(two_esl)+1] = {0};
+  const uint8_t *tmp_esl;
+  size_t esl_size;
 
   libstb_log_level = 0;
 
-  printf ("testing esl merge...");
+  printf ("testing esl functions...");
 
+  // Copy two_esl into a slightly larger buffer for trailing data check without overruning the actual
+  memcpy(tmp_two_esl, two_esl, two_esl_len);
+  
+  /* next_esl_from_buffer checks */
+  rc = next_esl_from_buffer (NULL, 0, NULL, NULL);
+  assert (rc == SV_BUF_INSUFFICIENT_DATA);  
+  rc = next_esl_from_buffer (two_esl, two_esl_len, NULL, NULL);
+  assert (rc == SV_BUF_INSUFFICIENT_DATA);
+  rc = next_esl_from_buffer (two_esl, 0, (const uint8_t **) &tmp_two_esl, &esl_size);
+  assert (rc == SV_BUF_INSUFFICIENT_DATA);
+
+  // Check pointer before the buffer
+  tmp_esl = (uint8_t *) (((long) two_esl) - 1); // Blatantly get an out-of-bounds pointer, circumvent cppcheck
+  rc = next_esl_from_buffer (tmp_two_esl, two_esl_len, &tmp_esl, &esl_size);
+  assert_msg (rc == SV_BUF_INSUFFICIENT_DATA, "expected insufficent data, got rc = %d\n", rc);
+  tmp_esl = two_esl + two_esl_len + 1;
+  // Check pointer after the buffer
+  rc = next_esl_from_buffer (tmp_two_esl, two_esl_len, &tmp_esl, &esl_size);
+  assert_msg (rc == SV_BUF_INSUFFICIENT_DATA, "expected insufficent data, got rc = %d\n", rc);
+
+  // Check that there is enough (remaining) space for an ESL in the buffer
+  tmp_esl = NULL;
+  rc = next_esl_from_buffer(tmp_two_esl, sizeof(sv_esl_t) - 1, &tmp_esl, &esl_size);
+  assert (rc == SV_BUF_INSUFFICIENT_DATA);
+
+  // First success iteration
+  tmp_esl = NULL;
+  rc = next_esl_from_buffer (tmp_two_esl, two_esl_len, &tmp_esl, &esl_size);
+  assert (rc == SV_SUCCESS);
+  assert (esl_size == 857);
+  assert (tmp_esl == tmp_two_esl);
+
+  // Second success iteration
+  rc = next_esl_from_buffer (tmp_two_esl, two_esl_len, &tmp_esl, &esl_size);
+  assert (rc == SV_SUCCESS);
+  assert (esl_size == 857);
+  assert (tmp_esl == tmp_two_esl + 857);
+
+  cert = tmp_esl; // Borrow this variable temporarily to store the correct position of the last esl
+
+  // Check the trailing data error,
+  //  it should be caught here since there are two esls, and we are widening the bounds slightly
+  rc = next_esl_from_buffer (tmp_two_esl, two_esl_len + 1, &tmp_esl, &esl_size);
+  assert (rc == SV_BUF_INSUFFICIENT_DATA);
+
+  tmp_esl = cert;
+  cert = NULL;
+
+  rc = next_esl_from_buffer (tmp_two_esl, two_esl_len, &tmp_esl, &esl_size);
+  assert (rc == SV_SUCCESS);
+  assert (tmp_esl == NULL);
+  // If the return ESL is NULL, we do not return a meaningful value in size. Perhaps we should.
+  // assert (esl_size == 0);
+
+  // Test invalid ESLs, consider just testing esl_internal_sizes_sensible directly
+  tmp_esl = NULL;
+  rc = next_esl_from_buffer (too_small_esl, too_small_esl_len, &tmp_esl, &esl_size);
+  assert (rc == SV_ESL_SIZE_INVALID);
+  assert (tmp_esl == NULL);
+  rc = next_esl_from_buffer (too_big_esl, too_big_esl_len, &tmp_esl, &esl_size);
+  assert (rc == SV_BUF_INSUFFICIENT_DATA);
+  rc = next_esl_from_buffer (sighdr_too_large_esl, sighdr_too_large_esl_len, &tmp_esl, &esl_size);
+  assert (rc == SV_ESL_SIZE_INVALID);
+  rc = next_esl_from_buffer (sig_too_large_esl, sig_too_large_esl_len, &tmp_esl, &esl_size);
+  assert (rc == SV_ESL_SIZE_INVALID);
+  rc = next_esl_from_buffer (zero_sig_esl, zero_sig_esl_len, &tmp_esl, &esl_size);
+  assert (rc == SV_ESL_SIZE_INVALID);
+  
+  
+  /* next_cert_from_esls_buf checks */
   rc = next_cert_from_esls_buf (one_esl, one_esl_len, &cert, &cert_size, &owner, &tmp);
 
   assert_rc (SV_SUCCESS);
@@ -63,6 +141,7 @@ main (int argc, char **argv)
   assert_rc (SV_SUCCESS);
   assert (cert == NULL);
   
+  /* merge esls checks */
   rc = merge_esls (one_esl, one_esl_len, kek_esl, kek_esl_len, NULL, &merge_size);
 
   assert_rc (SV_SUCCESS);
