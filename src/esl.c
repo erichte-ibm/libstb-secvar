@@ -214,7 +214,7 @@ next_esd_from_esl (const uint8_t *esl, const uint8_t **esd_data, size_t *esd_dat
   if (esd_data == NULL || esd_data_size == NULL)
     return SV_BUF_INSUFFICIENT_DATA;
 
-  if (*esd_data != NULL && ((*esd_data < esl) && (*esd_data > (esl + esl_size))))
+  if (*esd_data != NULL && ((*esd_data < esl) || (*esd_data > (esl + esl_size))))
     return SV_BUF_INSUFFICIENT_DATA;
 
   first = (*esd_data == NULL);
