@@ -22,6 +22,22 @@ else
   _LDFLAGS += -s
 endif
 
+# Handle coverage generator preference, only supports lcov/gcovr via the Makefile
+#  consider using the `make coverage` target and manually running your if not supported
+ifeq ($(strip $(PREFER_LCOV)), 1)
+  COVERER = lcov
+else ifeq ($(strip $(PREFER_GCOVR)), 1)
+  COVERER = gcovr
+else
+  # Default to preferring gcovr if it exists, fallback to lcov if not
+  ifneq ($(strip $(shell which gcovr)),)
+    COVERER = gcovr
+  else ifneq ($(strip $(shell which lcov)),)
+    COVERER = lcov
+  else
+  endif
+endif
+
 #use CRYPTO_READ_ONLY for smaller executable but limited functionality
 #removes all write functions (secvarctl generate, pem_to_der etc.)
 CRYPTO_READ_ONLY = 1
@@ -42,6 +58,7 @@ SRCS += crypto_openssl.c
 SRCS := $(addprefix $(SRC_DIR)/,$(SRCS))
 
 OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
+COV_OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.gcov.o,$(SRCS))
 _CFLAGS += $(CFLAGS) $(INCLUDE)
 _LDFLAGS += $(LDFLAGS)
 
@@ -53,7 +70,16 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)
 	$(CC) $(_CFLAGS) $< -o $@ -c
 
+# Coverage objects
+$(OBJ_DIR)/%.gcov.o: $(SRC_DIR)/%.c
+	@mkdir -p $(OBJ_DIR)
+	$(CC) -Wall -Werror -g -O0 --coverage $(INCLUDE) $< -o $@ -c
+
 $(LIB_DIR)/libstb-secvar-openssl.a: $(OBJS)
+	@mkdir -p $(LIB_DIR)
+	$(AR) -rcs $@ $^ $(_LDFLAGS)
+
+$(LIB_DIR)/libstb-secvar-openssl.gcov.a: $(COV_OBJS)
 	@mkdir -p $(LIB_DIR)
 	$(AR) -rcs $@ $^ $(_LDFLAGS)
 
@@ -69,6 +95,27 @@ check: $(LIB_DIR)/libstb-secvar-openssl.a
 
 memcheck: $(LIB_DIR)/libstb-secvar-openssl.a
 	@$(MAKE) -C $(TEST_DIR) memcheck
+
+coverage: $(LIB_DIR)/libstb-secvar-openssl.gcov.a
+	@$(MAKE) -C $(TEST_DIR) coverage
+
+coverage-report: coverage
+ifeq ($(COVERER),)
+	$(error Neither lcov nor gcovr appear to be installed, please install one of them to use this target)
+endif
+ifeq ($(PERSIST_REPORT),)
+	rm -rf report
+endif
+	@mkdir -p report
+
+ifeq ($(COVERER),lcov)
+	@echo "Using lcov to generate report"
+	@lcov --no-external --capture --directory . --output-file report/test.info
+	@genhtml report/test.info --legend --output-directory=report
+else ifeq ($(COVERER),gcovr)
+	@echo "Using gcovr to generate report"
+	@gcovr --html-details report/index.html --delete
+endif
 
 TEST_SRCS = $(wildcard test/*.c)
 # variableScope: avoid reducing variable scope to maintain C compatibility
@@ -90,5 +137,6 @@ cppcheck-be:
 clean:
 	@$(MAKE) -C $(TEST_DIR) clean
 	rm -rf $(OBJ_DIR) $(LIB_DIR)
+	rm -rf report/
 
-.PHONY: all check cppcheck cppcheck-be clean tests
+.PHONY: all check cppcheck cppcheck-be clean tests coverage coverage-report

@@ -26,6 +26,7 @@ BINS = $(patsubst %.c,$(BIN_DIR)/%,$(TEST_SRCS))
 all: $(BINS)
 check: $(patsubst test_%.c,%-check,$(TEST_SRCS))
 memcheck: $(patsubst test_%.c,%-memcheck,$(TEST_SRCS))
+coverage: $(patsubst test_%.c,%-coverage,$(TEST_SRCS))
 
 %-check: $(BIN_DIR)/test_%
 	@$<
@@ -33,11 +34,20 @@ memcheck: $(patsubst test_%.c,%-memcheck,$(TEST_SRCS))
 %-memcheck: $(BIN_DIR)/test_%
 	@valgrind --leak-check=full --error-exitcode=1 -q $<
 
+%-coverage: $(BIN_DIR)/test_gcov_%
+	@$<
+
+.PRECIOUS: $(BIN_DIR)/test_%
 $(BIN_DIR)/test_%: test_%.c $(LIB_DIR)/libstb-secvar-openssl.a
 	@mkdir -p $(BIN_DIR)
 	$(CC) -o $@ $^ $(_LDFLAGS) $(_CFLAGS)
 
+.PRECIOUS: $(BIN_DIR)/test_gcov_%
+$(BIN_DIR)/test_gcov_%: test_%.c $(LIB_DIR)/libstb-secvar-openssl.gcov.a
+	@mkdir -p $(BIN_DIR)
+	$(CC) -o $@ $^ $(_LDFLAGS) -Wall -Werror -g -O0 --coverage $(INCLUDE)
+
 clean:
 	rm -rf $(BIN_DIR)
 
-.PHONY: all check cppcheck cppecheck-be clean
+.PHONY: all check cppcheck cppecheck-be clean coverage
