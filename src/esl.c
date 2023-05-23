@@ -70,7 +70,7 @@ next_esl_from_buffer (const uint8_t *buf, size_t buf_size, const uint8_t **esl,
   if (buf == NULL || esl == NULL || esl_size == NULL)
     return SV_BUF_INSUFFICIENT_DATA;
 
-  if (*esl != NULL && ((*esl < buf) && (*esl > (buf + buf_size))))
+  if (*esl != NULL && ((*esl < buf) || (*esl > (buf + buf_size))))
     return SV_BUF_INSUFFICIENT_DATA;
 
   first = (*esl == NULL);
