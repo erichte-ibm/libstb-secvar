@@ -135,6 +135,25 @@ main (int argc, char **argv)
   assert (rc == SV_ESL_SIZE_INVALID);
   
   /* next_cert_from_esls_buf checks */
+  // NULL argument checks
+  cert = NULL;
+  rc = next_cert_from_esls_buf (NULL, one_esl_len, &cert, &cert_size, &owner, &tmp);
+  assert_rc (SV_BUF_INSUFFICIENT_DATA);
+  rc = next_cert_from_esls_buf (one_esl, one_esl_len, NULL, &cert_size, &owner, &tmp);
+  assert_rc (SV_BUF_INSUFFICIENT_DATA);
+  rc = next_cert_from_esls_buf (one_esl, one_esl_len, &cert, NULL, &owner, &tmp);
+  assert_rc (SV_BUF_INSUFFICIENT_DATA);
+  rc = next_cert_from_esls_buf (one_esl, one_esl_len, &cert, &cert_size, NULL, &tmp);
+  assert_rc (SV_BUF_INSUFFICIENT_DATA);
+  rc = next_cert_from_esls_buf (one_esl, one_esl_len, &cert, &cert_size, &owner, NULL);
+  assert_rc (SV_BUF_INSUFFICIENT_DATA);
+
+  // Check bad inputs -- some of these call out to previously tested functions, so only
+  //  test the error path branch rather than all possible errors again
+  rc = next_cert_from_esls_buf (zero_sig_esl, zero_sig_esl_len, &cert, &cert_size, &owner, &tmp);
+  assert_rc (SV_ESL_SIZE_INVALID);
+
+
   rc = next_cert_from_esls_buf (one_esl, one_esl_len, &cert, &cert_size, &owner, &tmp);
 
   assert_rc (SV_SUCCESS);
