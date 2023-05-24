@@ -109,6 +109,30 @@ main (int argc, char **argv)
   rc = next_esl_from_buffer (zero_sig_esl, zero_sig_esl_len, &tmp_esl, &esl_size);
   assert (rc == SV_ESL_SIZE_INVALID);
   
+  /* next_esd_from_esl checks */
+  const uint8_t *esd_data;
+  size_t esd_size;
+  uuid_t esd_owner;
+  // Check NULL args
+  rc = next_esd_from_esl(NULL, &esd_data, &esd_size, &esd_owner);
+  assert (rc == SV_BUF_INSUFFICIENT_DATA);
+  rc = next_esd_from_esl(one_esl, NULL, &esd_size, &esd_owner);
+  assert (rc == SV_BUF_INSUFFICIENT_DATA);
+  rc = next_esd_from_esl(one_esl, &esd_data, NULL, &esd_owner);
+  assert (rc == SV_BUF_INSUFFICIENT_DATA);
+
+  // Check current ESD address is within the bounds of the ESL
+  esd_data = (uint8_t *) (((long) one_esl) - 1);
+  rc = next_esd_from_esl(one_esl, &esd_data, &esd_size, &esd_owner);
+  assert (rc == SV_BUF_INSUFFICIENT_DATA);
+  esd_data = one_esl + one_esl_len + 1;
+  rc = next_esd_from_esl(one_esl, &esd_data, &esd_size, &esd_owner);
+  assert (rc == SV_BUF_INSUFFICIENT_DATA);
+
+  // Unlikely to occur, but test passing in an ESL with invalid signature size
+  esd_data = NULL;
+  rc = next_esd_from_esl(sig_too_large_esl, &esd_data, &esd_size, &esd_owner);
+  assert (rc == SV_ESL_SIZE_INVALID);
   
   /* next_cert_from_esls_buf checks */
   rc = next_cert_from_esls_buf (one_esl, one_esl_len, &cert, &cert_size, &owner, &tmp);
