@@ -109,6 +109,38 @@ main (int argc, char **argv)
   rc = next_esl_from_buffer (zero_sig_esl, zero_sig_esl_len, &tmp_esl, &esl_size);
   assert (rc == SV_ESL_SIZE_INVALID);
   
+  // Test first ESL in buffer OK, second ESL in buffer BAD
+  uint8_t bad_buf[sizeof(one_esl)*2] = {0};
+  tmp_esl = NULL;
+  memcpy(bad_buf, one_esl, one_esl_len);
+  memcpy(bad_buf + one_esl_len, one_esl, one_esl_len);
+  // Sanity check, this is two valid ESLs, should pass
+  rc = next_esl_from_buffer (bad_buf, sizeof(bad_buf), &tmp_esl, &esl_size);
+  assert_rc (SV_SUCCESS);
+  assert (tmp_esl == bad_buf);
+  rc = next_esl_from_buffer (bad_buf, sizeof(bad_buf), &tmp_esl, &esl_size);
+  assert_rc (SV_SUCCESS);
+  assert (tmp_esl == bad_buf + one_esl_len);
+  // Second ESL too small
+  assert_msg (one_esl_len == too_small_esl_len, "one_esl_len != too_small_esl_len, probably a test case problem. regenerate data so these match");
+  assert_msg (one_esl_len == too_big_esl_len, "one_esl_len != too_big_esl_len, probably a test case problem. regenerate data so these match");
+  assert_msg (one_esl_len == sig_too_large_esl_len, "one_esl_len != sig_too_large_esl_len, probably a test case problem. regenerate data so these match");
+  memcpy (bad_buf + one_esl_len, too_small_esl, too_small_esl_len);
+  tmp_esl = bad_buf;
+  rc = next_esl_from_buffer (bad_buf, sizeof(bad_buf), &tmp_esl, &esl_size);
+  assert_rc (SV_ESL_SIZE_INVALID);
+  // Second ESL too large
+  memcpy (bad_buf + one_esl_len, too_big_esl, too_big_esl_len);
+  tmp_esl = bad_buf;
+  rc = next_esl_from_buffer (bad_buf, sizeof(bad_buf), &tmp_esl, &esl_size);
+  assert_rc (SV_BUF_INSUFFICIENT_DATA);
+  // Internal sizes invalid
+  memcpy (bad_buf + one_esl_len, sig_too_large_esl, sig_too_large_esl_len);
+  tmp_esl = bad_buf;
+  rc = next_esl_from_buffer (bad_buf, sizeof(bad_buf), &tmp_esl, &esl_size);
+  assert_rc (SV_ESL_SIZE_INVALID);
+
+
   /* next_esd_from_esl checks */
   const uint8_t *esd_data;
   size_t esd_size;
