@@ -127,12 +127,11 @@ main (int argc, char **argv)
   tmp = NULL;
   tmp_size = 0;
 
-  wipe_by_PK_auth_len -= APPEND_HEADER_LEN;
   /*
    * try the wipe
    * .. validly signed, but allow unsigned PK updates is not set.
    */
-  rc = update_var_from_auth (PK_LABEL, 4, wipe_by_PK_auth + APPEND_HEADER_LEN, wipe_by_PK_auth_len,
+  rc = update_var_from_auth (PK_LABEL, 4, wipe_by_PK_auth + APPEND_HEADER_LEN, wipe_by_PK_auth_len - APPEND_HEADER_LEN,
                              PK_sv, PK_sv_len, false, false, PK_sv, PK_sv_len,
                              KEK, KEK_size, &tmp, &tmp_size, &log_data);
   printf ("8 log_data: 0x%lx\n", log_data);
@@ -140,7 +139,7 @@ main (int argc, char **argv)
     printf ("rc = %x\n", rc);
   assert (rc == SV_INVALID_PK_UPDATE);
 
-  rc = update_var_from_auth (PK_LABEL, 4, wipe_by_PK_auth + APPEND_HEADER_LEN, wipe_by_PK_auth_len,
+  rc = update_var_from_auth (PK_LABEL, 4, wipe_by_PK_auth + APPEND_HEADER_LEN, wipe_by_PK_auth_len - APPEND_HEADER_LEN,
                              PK_sv, PK_sv_len, true, false, PK_sv, PK_sv_len,
                              KEK, KEK_size, &tmp, &tmp_size, &log_data);
   printf ("9 log_data: 0x%lx\n", log_data);
