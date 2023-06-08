@@ -114,7 +114,7 @@ pack_signed_var (const uint8_t *data, const size_t size, const timestamp_t *time
 }
 
 static bool
-cert_parses_as_good_RSA (const uint8_t *cert_data, size_t cert_size)
+cert_parses_as_good_RSA (const uint8_t *cert_data, size_t cert_size, const bool check_CA)
 {
   int rc;
   crypto_x509_t *cert;
@@ -127,6 +127,14 @@ cert_parses_as_good_RSA (const uint8_t *cert_data, size_t cert_size)
   rc = crypto.validate_x509_certificate (cert);
   if (rc != SV_SUCCESS)
     {
+      prlog (PR_ERR, "certificate validation failed (%d)\n", rc);
+      crypto.release_x509_certificate (cert);
+      return false;
+    }
+
+  if (check_CA && !crypto.validate_x509_certificate_CA (cert))
+    {
+      prlog (PR_ERR, "it is not CA certificate\n");
       crypto.release_x509_certificate (cert);
       return false;
     }
@@ -303,6 +311,57 @@ is_wipe_update (const bool allow_unauthenticated, const uint8_t *new_esl_data,
   return rc;
 }
 
+static sv_err_t
+validate_cert (const uint8_t *new_esl_data, const size_t new_esl_data_size,
+               const bool check_CA, const bool is_pk)
+{
+  sv_err_t rc = SV_SUCCESS;
+  const uint8_t *cert_data = NULL, *tmp = NULL;
+  size_t cert_size = 0;
+  uuid_t cert_owner = { 0 };
+
+  /* this may be either nothing or a list of RSA-2048 certs in ESLs */
+  rc = next_cert_from_esls_buf (new_esl_data, new_esl_data_size,
+                                &cert_data, &cert_size, &cert_owner, &tmp);
+  while (rc == SV_SUCCESS && cert_data != NULL)
+    {
+      if (!cert_parses_as_good_RSA (cert_data, cert_size, check_CA))
+        return SV_X509_ERROR;
+
+      rc = next_cert_from_esls_buf (new_esl_data, new_esl_data_size,
+                                    &cert_data, &cert_size, &cert_owner, &tmp);
+      if (is_pk && (rc != SV_SUCCESS || cert_data != NULL))
+        {
+          prlog (PR_ERR, "it contained multiple certs or trailing data\n");
+          return SV_INVALID_PK_UPDATE;
+        }
+    }
+
+  return rc;
+}
+
+static sv_err_t
+validate_trustedcadb_cert (const uint8_t *new_esl_data, const size_t new_esl_data_size,
+                           const uint16_t *name)
+{
+  sv_err_t rc = SV_SUCCESS;
+
+  if (!wide_str_equals (name, (const uint16_t *) &security_variable[6]))
+    return rc;
+
+  if (new_esl_data_size != 0)
+    {
+      rc = validate_cert (new_esl_data, new_esl_data_size, true, false);
+      if (rc != SV_SUCCESS)
+        {
+          prlog (PR_ERR, "trustedcadb update failed (%d)\n", rc);
+          return SV_INVALID_TRUSTEDCADB_UPDATE;
+        }
+    }
+
+  return rc;
+}
+
 /*
  * If PK, verify that this is an ESL with an RSA-2048 cert
  */
@@ -311,32 +370,18 @@ validate_pk_cert (const uint8_t *new_esl_data, const size_t new_esl_data_size,
                   const bool is_pk)
 {
   sv_err_t rc = SV_SUCCESS;
-  const uint8_t *cert_data = NULL, *tmp = NULL;
-  size_t cert_size = 0;
-  uuid_t cert_owner = { 0 };
 
   if (!is_pk)
     return SV_INVALID_PK_UPDATE;
 
-  rc = next_cert_from_esls_buf (new_esl_data, new_esl_data_size,
-                                &cert_data, &cert_size, &cert_owner, &tmp);
-  if (rc != SV_SUCCESS)
+  if (new_esl_data_size != 0)
     {
-      prlog (PR_ERR, "PK update didn't parse as ESLs.\n");
-      return SV_INVALID_PK_UPDATE;
-    }
-  else if (!cert_parses_as_good_RSA (cert_data, cert_size))
-    {
-      prlog (PR_ERR, "PK update wasn't a cert we recognise\n");
-      return SV_INVALID_PK_UPDATE;
-    }
-
-  rc = next_cert_from_esls_buf (new_esl_data, new_esl_data_size,
-                                &cert_data, &cert_size, &cert_owner, &tmp);
-  if (rc != SV_SUCCESS || cert_data != NULL)
-    {
-      prlog (PR_ERR, "PK contained multiple certs or trailing data\n");
-      return SV_INVALID_PK_UPDATE;
+      rc = validate_cert (new_esl_data, new_esl_data_size, false, is_pk);
+      if (rc != SV_SUCCESS)
+        {
+          prlog (PR_ERR, "PK update failed (%d)\n", rc);
+          return SV_INVALID_PK_UPDATE;
+        }
     }
 
   return rc;
@@ -350,33 +395,16 @@ validate_kek_cert (const uint8_t *new_esl_data, const size_t new_esl_data_size,
                    const uint16_t *name)
 {
   sv_err_t rc = SV_SUCCESS;
-  const uint8_t *cert_data = NULL, *tmp = NULL;
-  size_t cert_size = 0;
-  uuid_t cert_owner = { 0 };
 
   if (!wide_str_equals (name, (const uint16_t *) &global_variable[1]))
     return rc;
 
-  /* this may be either nothing or a list of RSA-2048 certs in ESLs */
   if (new_esl_data_size != 0)
     {
-      rc = next_cert_from_esls_buf (new_esl_data, new_esl_data_size,
-                                    &cert_data, &cert_size, &cert_owner, &tmp);
-      while (rc == SV_SUCCESS && cert_data != NULL)
-        {
-          if (!cert_parses_as_good_RSA (cert_data, cert_size))
-            {
-              prlog (PR_ERR, "KEK update contained a cert we don't recognise\n");
-              return SV_INVALID_KEK_UPDATE;
-            }
-
-          rc = next_cert_from_esls_buf (new_esl_data, new_esl_data_size,
-                                            &cert_data, &cert_size, &cert_owner, &tmp);
-        }
-
+      rc = validate_cert (new_esl_data, new_esl_data_size, false, false);
       if (rc != SV_SUCCESS)
         {
-          prlog (PR_ERR, "KEK update failed to parse as ESLs, or trailing data.");
+          prlog (PR_ERR, "KEK update failed (%d)\n", rc);
           return SV_INVALID_KEK_UPDATE;
         }
     }
@@ -482,11 +510,15 @@ pseries_update_variable (const update_req_t *update_req, uint8_t **new_esl_data,
       if ((rc == SV_SUCCESS && (verified_flag & SV_AUTH_VERIFIED_BY_KEK) &&
           esl_data_size == 0) || (rc == SV_SUCCESS && esl_data_size != 0))
         {
-          /* pack it */
-          rc = pack_signed_var (esl_data, esl_data_size, &new_time, new_esl_data,
-                                new_esl_data_size);
-          if (rc != SV_SUCCESS)
-            prlog (PR_ERR, "Error packing new variable.\n");
+          rc = validate_trustedcadb_cert (esl_data, esl_data_size, name);
+          if (rc == SV_SUCCESS)
+            {
+              /* pack it */
+              rc = pack_signed_var (esl_data, esl_data_size, &new_time, new_esl_data,
+                                    new_esl_data_size);
+              if (rc != SV_SUCCESS)
+                prlog (PR_ERR, "Error packing new variable.\n");
+            }
         }
     }
   else

@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <openssl/pkcs7.h>
 #include <openssl/x509.h>
+#include <openssl/x509v3.h>
 #include <openssl/objects.h>
 #include <openssl/ossl_typ.h>
 #include <openssl/asn1.h>
@@ -19,6 +20,15 @@
 #include "libstb-secvar-errors.h"
 
 /* X509 */
+
+static bool
+x509_is_CA (crypto_x509_t *x509)
+{
+  if (X509_check_ca (x509) == 1)
+    return true;
+
+  return false;
+}
 
 static int
 x509_get_der_len (crypto_x509_t *x509, size_t *size)
@@ -878,6 +888,7 @@ x509_func_t crypto_x509 = { .get_der_len = x509_get_der_len,
                             .get_sig_len = x509_get_sig_len,
                             .parse_der = x509_parse_der,
                             .error_string = error_string,
+                            .is_CA = x509_is_CA,
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
                             .get_short_info = x509_get_short_info,
                             .md_is_sha256 = x509_md_is_sha256,

@@ -49,6 +49,7 @@ enum _sv_errors
    * a set of ESLs containing RSA-2048/4096 certs.
    */
   SV_INVALID_KEK_UPDATE,
+  SV_INVALID_TRUSTEDCADB_UPDATE,
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
   /* currently unused, untested and broken auth file write support */

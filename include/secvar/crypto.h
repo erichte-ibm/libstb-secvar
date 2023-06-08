@@ -33,6 +33,7 @@ typedef int (*crypto_x509_sig_len) (crypto_x509_t *, size_t *);
 typedef int (*crypto_x509_is_pkcs1_sha256) (crypto_x509_t *);
 typedef crypto_x509_t *(*crypto_x509_parse_der_cert) (const unsigned char *, size_t);
 typedef void (*crypto_str_error) (int, char *, size_t);
+typedef bool (*crypto_x509_cert_is_CA) (crypto_x509_t *);
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 typedef void (*crypto_x509_short_info) (crypto_x509_t *, char *, size_t);
@@ -105,6 +106,7 @@ struct x509_func
   crypto_x509_sig_len get_sig_len;
   crypto_x509_parse_der_cert parse_der;
   crypto_str_error error_string;
+  crypto_x509_cert_is_CA is_CA;
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
   crypto_x509_short_info get_short_info;
   crypto_x509_cert_long_desc get_long_desc;
@@ -131,6 +133,7 @@ typedef void (*release_x509_cert) (crypto_x509_t *);
 typedef void (*release_pkcs7_cert) (crypto_pkcs7_t *);
 typedef int (*verify_pkcs7) (crypto_pkcs7_t *, crypto_x509_t *, unsigned char *, int);
 typedef int (*pkcs7_md) (crypto_pkcs7_t *);
+typedef bool (*validate_x509_cert_CA) (crypto_x509_t *);
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 typedef int (*generate_pkcs7_sig) (uint8_t *, size_t, uint8_t **, uint8_t **, size_t, uint8_t **, size_t *);
@@ -157,6 +160,7 @@ struct crypto
   release_pkcs7_cert release_pkcs7_certificate;
   verify_pkcs7 verify_pkcs7_signature;
   pkcs7_md pkcs7_md_is_sha256;
+  validate_x509_cert_CA validate_x509_certificate_CA;
   crypto_str_error error_string;
 };
 
