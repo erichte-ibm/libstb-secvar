@@ -20,6 +20,7 @@
 
 extern int libstb_log_level;
 
+#ifndef NO_PRLOG
 #define prlog(l, ...)                                             \
   do                                                              \
     {                                                             \
@@ -27,5 +28,8 @@ extern int libstb_log_level;
         fprintf ((l <= PR_ERR) ? stderr : stdout, ##__VA_ARGS__); \
     }                                                             \
   while (0)
+#else
+#define prlog(l, ...)
+#endif
 
 #endif
