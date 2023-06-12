@@ -73,7 +73,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 # Coverage objects
 $(OBJ_DIR)/%.gcov.o: $(SRC_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)
-	$(CC) -Wall -Werror -g -O0 --coverage $(INCLUDE) $< -o $@ -c
+	$(CC) -Wall -Werror -g -O0 --coverage -DNO_PRLOG $(INCLUDE) $< -o $@ -c
 
 $(LIB_DIR)/libstb-secvar-openssl.a: $(OBJS)
 	@mkdir -p $(LIB_DIR)
