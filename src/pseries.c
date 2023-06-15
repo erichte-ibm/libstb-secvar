@@ -132,7 +132,7 @@ cert_parses_as_good_RSA (const uint8_t *cert_data, size_t cert_size, const bool 
       return false;
     }
 
-  if (check_CA && !crypto.validate_x509_certificate_CA (cert))
+  if (check_CA && !crypto.x509_is_CA (cert))
     {
       prlog (PR_ERR, "it is not CA certificate\n");
       crypto.release_x509_certificate (cert);
