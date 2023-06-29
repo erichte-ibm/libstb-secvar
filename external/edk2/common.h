@@ -47,6 +47,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "config.h"
+#include "external/endian/endian.h"
 
 #define MAX_HASH_SIZE 32
 #define UUID_SIZE 16
