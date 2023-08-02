@@ -333,7 +333,7 @@ typedef struct auth_data auth_data_t;
 typedef struct update_request update_req_t;
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
-static const uint8_t defined_sb_variables [9] [12] = { "PK", "KEK", "db", "dbx", "grubdb",
+static const char defined_sb_variables [9] [12] = { "PK", "KEK", "db", "dbx", "grubdb",
                                                        "grubdbx", "sbat", "moduledb",
                                                        "trustedcadb"
                                                      };
