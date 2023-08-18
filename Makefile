@@ -53,7 +53,13 @@ SRCS = esl.c \
        log.c \
        phyp.c
 
-SRCS += crypto_openssl.c
+#By default, build with openssl as crypto library
+CRYPTO_LIB = openssl
+ifeq ($(CRYPTO_LIB), openssl)
+  SRCS += crypto_openssl.c
+  CRYPTO_ARG = OPENSSL=1
+  _CFLAGS += -DSECVAR_CRYPTO_OPENSSL
+endif
 
 SRCS := $(addprefix $(SRC_DIR)/,$(SRCS))
 
@@ -62,7 +68,7 @@ COV_OBJS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.gcov.o,$(SRCS))
 _CFLAGS += $(CFLAGS) $(INCLUDE)
 _LDFLAGS += $(LDFLAGS)
 
-all: $(LIB_DIR)/libstb-secvar-openssl.a $(LIB_DIR)/libstb-secvar-openssl.so
+all: $(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).a $(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).so
 
 -include $(OBJS:.o=.d)
 
@@ -75,28 +81,28 @@ $(OBJ_DIR)/%.gcov.o: $(SRC_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)
 	$(CC) -Wall -Werror -g -O0 --coverage -DNO_PRLOG $(INCLUDE) $< -o $@ -c
 
-$(LIB_DIR)/libstb-secvar-openssl.a: $(OBJS)
+$(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).a: $(OBJS)
 	@mkdir -p $(LIB_DIR)
 	$(AR) -rcs $@ $^ $(_LDFLAGS)
 
-$(LIB_DIR)/libstb-secvar-openssl.gcov.a: $(COV_OBJS)
+$(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).gcov.a: $(COV_OBJS)
 	@mkdir -p $(LIB_DIR)
 	$(AR) -rcs $@ $^ $(_LDFLAGS)
 
-$(LIB_DIR)/libstb-secvar-openssl.so: $(OBJS)
+$(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).so: $(OBJS)
 	@mkdir -p $(LIB_DIR)
 	$(LD) $(_LDFLAGS) -shared $^ -o $@
 
-tests: $(LIB_DIR)/libstb-secvar-openssl.a
-	@$(MAKE) -C $(TEST_DIR)
+tests: $(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).a
+	@$(MAKE) -C $(TEST_DIR) $(CRYPTO_ARG)
 
-check: $(LIB_DIR)/libstb-secvar-openssl.a
-	@$(MAKE) -C $(TEST_DIR) check
+check: $(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).a
+	@$(MAKE) -C $(TEST_DIR) $(CRYPTO_ARG) check
 
-memcheck: $(LIB_DIR)/libstb-secvar-openssl.a
+memcheck: $(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).a
 	@$(MAKE) -C $(TEST_DIR) memcheck
 
-coverage: $(LIB_DIR)/libstb-secvar-openssl.gcov.a
+coverage: $(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).gcov.a
 	@$(MAKE) -C $(TEST_DIR) coverage
 
 coverage-report: coverage

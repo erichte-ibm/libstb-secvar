@@ -18,8 +18,15 @@ TEST_SRCS = test_esl.c \
             test_pseries.c \
             test_phyp.c
 
-_LDFLAGS = $(LDFLAGS) -lcrypto
+_LDFLAGS = $(LDFLAGS)
 _CFLAGS += $(CFLAGS) $(INCLUDE)
+
+#By default, build with openssl as crypto library
+CRYPTO_LIB = openssl
+ifeq ($(CRYPTO_LIB), openssl)
+  _LDFLAGS += -lcrypto  
+  _CFLAGS += -DSECVAR_CRYPTO_OPENSSL
+endif
 
 BINS = $(patsubst %.c,$(BIN_DIR)/%,$(TEST_SRCS))
 
@@ -38,12 +45,12 @@ coverage: $(patsubst test_%.c,%-coverage,$(TEST_SRCS))
 	@$<
 
 .PRECIOUS: $(BIN_DIR)/test_%
-$(BIN_DIR)/test_%: test_%.c $(LIB_DIR)/libstb-secvar-openssl.a
+$(BIN_DIR)/test_%: test_%.c $(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).a
 	@mkdir -p $(BIN_DIR)
 	$(CC) -o $@ $^ $(_LDFLAGS) $(_CFLAGS)
 
 .PRECIOUS: $(BIN_DIR)/test_gcov_%
-$(BIN_DIR)/test_gcov_%: test_%.c $(LIB_DIR)/libstb-secvar-openssl.gcov.a
+$(BIN_DIR)/test_gcov_%: test_%.c $(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).gcov.a
 	@mkdir -p $(BIN_DIR)
 	$(CC) -o $@ $^ $(_LDFLAGS) -Wall -Werror -g -O0 --coverage $(INCLUDE)
 

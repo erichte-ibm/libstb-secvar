@@ -6,11 +6,13 @@
 #define LIBSTB_SECVAR_CRYPTO_H
 
 #include <stdbool.h>
+#include <external/edk2/common.h>
+
+#ifdef SECVAR_CRYPTO_OPENSSL
 #include <openssl/obj_mac.h>
 #include <openssl/pkcs7.h>
 #include <openssl/x509.h>
 #include <openssl/evp.h>
-#include <external/edk2/common.h>
 
 #define CRYPTO_MD_SHA1 NID_sha1
 #define CRYPTO_MD_SHA224 NID_sha224
@@ -21,6 +23,9 @@
 typedef PKCS7_SIGNED crypto_pkcs7_t;
 typedef X509 crypto_x509_t;
 typedef EVP_MD_CTX crypto_md_ctx_t;
+#else
+#error Crypto Library not defined! Define SECVAR_CRYPTO_OPENSSL
+#endif
 
 /* X509 */
 typedef int (*crypto_x509_der_cert_len) (crypto_x509_t *, size_t *);
