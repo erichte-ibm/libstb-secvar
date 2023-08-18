@@ -41,7 +41,7 @@ validate_x509_certificate (crypto_x509_t *x509)
   if (crypto_x509_get_version (x509) != 3)
     return SV_X509_ERROR;
 
-  if (!crypto_x509.is_RSA (x509))
+  if (!crypto_x509_is_RSA (x509))
     return SV_UNEXPECTED_CERT_ALGO;
 
   len = crypto_x509_get_sig_len (x509);

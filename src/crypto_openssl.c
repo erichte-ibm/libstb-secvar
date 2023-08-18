@@ -45,11 +45,10 @@ int crypto_x509_get_version (crypto_x509_t *x509)
   return X509_get_version (x509) + 1;
 }
 
-static bool
-x509_is_RSA (crypto_x509_t *x509)
+bool crypto_x509_is_RSA (crypto_x509_t *x509)
 {
+  int pk_type;
   EVP_PKEY *pub = NULL;
-  bool rc;
 
   pub = X509_get_pubkey (x509);
   if (!pub)
@@ -57,35 +56,13 @@ x509_is_RSA (crypto_x509_t *x509)
       prlog (PR_ERR, "ERROR: Failed to extract public key from x509\n");
       return false;
     }
-#if !defined(OPENSSL_VERSION_MAJOR) || OPENSSL_VERSION_MAJOR < 3
-  RSA *rsa = NULL;
-  rsa = EVP_PKEY_get1_RSA (pub);
-  if (!rsa)
-    {
-      prlog (PR_ERR, "ERROR: Failed to extract RSA information from public key "
-                     "of x509\n");
-      EVP_PKEY_free (pub);
-      return false;
-    }
 
-  RSA_free (rsa);
-  rc = true;
-#else
-  int pk_type;
   pk_type = EVP_PKEY_base_id (pub);
   if (pk_type == NID_undef)
-    {
-      prlog (PR_ERR, "ERROR: Failed to extract key type from x509\n");
-      rc = false;
-    }
-  else if (pk_type != EVP_PKEY_RSA)
-    rc = false;
-  else
-    rc = true;
-#endif
+    prlog (PR_ERR, "ERROR: Failed to extract key type from x509\n");
 
   EVP_PKEY_free (pub);
-  return rc;
+  return pk_type == EVP_PKEY_RSA;
 }
 
 int crypto_x509_get_pk_bit_len (crypto_x509_t *x509)
@@ -865,7 +842,6 @@ pkcs7_func_t crypto_pkcs7 = { .parse_der = pkcs7_parse_der,
 
 x509_func_t crypto_x509 = {
                             .oid_is_pkcs1_sha256 = x509_oid_is_pkcs1_sha256,
-                            .is_RSA = x509_is_RSA,
                             .parse_der = x509_parse_der,
                             .error_string = error_string,
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
