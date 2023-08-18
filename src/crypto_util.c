@@ -7,11 +7,6 @@
 #include "secvar/crypto.h"
 #include "libstb-secvar-errors.h"
 
-static bool
-x509_is_CA (crypto_x509_t *x509)
-{
-  return crypto_x509.is_CA (x509);
-}
 
 static int
 get_x509_certificate (const uint8_t *cert_data, size_t cert_data_size, crypto_x509_t **x509)
@@ -247,6 +242,5 @@ crypto_func_t crypto = { .generate_md_hash = generate_md_hash,
                          .release_x509_certificate = release_x509_certificate,
                          .verify_pkcs7_signature = verify_pkcs7_signature,
                          .pkcs7_md_is_sha256 = pkcs7_md_is_sha256,
-                         .x509_is_CA = x509_is_CA,
                          .error_string = error_string
                          };
