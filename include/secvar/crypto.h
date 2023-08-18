@@ -28,13 +28,9 @@ typedef EVP_MD_CTX crypto_md_ctx_t;
 #endif
 
 /* X509 */
-typedef int (*crypto_x509_der_cert_len) (crypto_x509_t *, size_t *);
-typedef int (*crypto_x509_tbs_der_cert_len) (crypto_x509_t *, size_t *);
 typedef int (*crypto_x509_cert_version) (crypto_x509_t *);
 typedef bool (*crypto_x509_cert_is_RSA) (crypto_x509_t *);
-typedef int (*crypto_x509_pk_bit_len) (crypto_x509_t *, size_t *);
 typedef void (*crypto_x509_free_cert) (crypto_x509_t *);
-typedef int (*crypto_x509_sig_len) (crypto_x509_t *, size_t *);
 typedef int (*crypto_x509_is_pkcs1_sha256) (crypto_x509_t *);
 typedef crypto_x509_t *(*crypto_x509_parse_der_cert) (const unsigned char *, size_t);
 typedef void (*crypto_str_error) (int, char *, size_t);
@@ -45,6 +41,34 @@ typedef void (*crypto_str_error) (int, char *, size_t);
  * @return true if CA, otherwise false
  */
 bool crypto_x509_is_CA (crypto_x509_t *x509);
+
+/*
+ * gets the DER length of the x509 structure
+ * @param x509 , reference to the x509
+ * @return length in bytes or negative value on error
+ */
+int crypto_x509_get_der_len (crypto_x509_t *x509);
+
+/*
+ * gets the length of the to-be-signed buffer
+ * @param x509 , reference to the x509
+ * @return length in bytes or negative value on error
+ */
+int crypto_x509_get_tbs_der_len (crypto_x509_t *x509);
+
+/*
+ * gets the length of the signature
+ * @param x509 , reference to the x509
+ * @return length in bytes or negative value on error
+ */
+int crypto_x509_get_sig_len (crypto_x509_t *x509);
+
+/*
+ * gets the length in bits of the signature
+ * @param x509, reference to the x509
+ * @return length in bits or negative value on error
+ */
+int crypto_x509_get_pk_bit_len (crypto_x509_t *x509);
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 typedef void (*crypto_x509_short_info) (crypto_x509_t *, char *, size_t);
@@ -108,13 +132,9 @@ typedef struct md_func md_func_t;
 
 struct x509_func
 {
-  crypto_x509_der_cert_len get_der_len;
-  crypto_x509_tbs_der_cert_len get_tbs_der_len;
   crypto_x509_is_pkcs1_sha256 oid_is_pkcs1_sha256;
   crypto_x509_cert_version get_version;
   crypto_x509_cert_is_RSA is_RSA;
-  crypto_x509_pk_bit_len get_pk_bit_len;
-  crypto_x509_sig_len get_sig_len;
   crypto_x509_parse_der_cert parse_der;
   crypto_str_error error_string;
 #ifdef SECVAR_CRYPTO_WRITE_FUNC

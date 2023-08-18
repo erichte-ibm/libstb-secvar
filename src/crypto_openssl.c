@@ -26,32 +26,14 @@ bool crypto_x509_is_CA (crypto_x509_t *x509)
   return !!X509_check_ca (x509);
 }
 
-static int
-x509_get_der_len (crypto_x509_t *x509, size_t *size)
+int crypto_x509_get_der_len (crypto_x509_t *x509)
 {
-  int rc;
-
-  rc = i2d_X509 (x509, NULL);
-  if (rc < 0)
-    return SV_UNEXPECTED_CRYPTO_ERROR;
-
-  *size = rc;
-
-  return SV_SUCCESS;
+  return i2d_X509 (x509, NULL);
 }
 
-static int
-x509_get_tbs_der_len (crypto_x509_t *x509, size_t *size)
+int crypto_x509_get_tbs_der_len (crypto_x509_t *x509)
 {
-  int rc;
-
-  rc = i2d_re_X509_tbs (x509, NULL);
-  if (rc < 0)
-    return SV_UNEXPECTED_CRYPTO_ERROR;
-
-  *size = rc;
-
-  return SV_SUCCESS;
+  return i2d_re_X509_tbs (x509, NULL);
 }
 
 static int
@@ -107,17 +89,19 @@ x509_is_RSA (crypto_x509_t *x509)
   return rc;
 }
 
-int
-x509_get_pk_bit_len (crypto_x509_t *x509, size_t *size)
+int crypto_x509_get_pk_bit_len (crypto_x509_t *x509)
 {
   EVP_PKEY *pub = NULL;
-  int length;
+  int length, rc;
 
   pub = X509_get_pubkey (x509);
   if (!pub)
     {
       prlog (PR_ERR, "ERROR: Failed to extract public key from x509\n");
-      return SV_X509_ERROR;
+      rc = ERR_get_error();
+      rc = !rc ? ERR_PACK(ERR_LIB_X509, 0, X509_R_UNABLE_TO_GET_CERTS_PUBLIC_KEY) : rc;
+      // make sure negative
+      return rc > 0 ? rc * -1 : rc;
     }
 
 #if !defined(OPENSSL_VERSION_MAJOR) || OPENSSL_VERSION_MAJOR < 3
@@ -127,7 +111,8 @@ x509_get_pk_bit_len (crypto_x509_t *x509, size_t *size)
     {
       prlog (PR_ERR, "ERROR: Failed to extract RSA information from public key "
                      "of x509\n");
-      return SV_X509_ERROR;
+      EVP_PKEY_free(pub);
+      goto err_out;
     }
   length = RSA_bits (rsa);
   RSA_free (rsa);
@@ -136,7 +121,8 @@ x509_get_pk_bit_len (crypto_x509_t *x509, size_t *size)
     {
       prlog (PR_ERR, "ERROR: Public key of x509 is not of type RSA\n");
       EVP_PKEY_free (pub);
-      return SV_X509_ERROR;
+      EVP_PKEY_free(pub);
+      goto err_out;
     }
 
   length = EVP_PKEY_get_bits (pub);
@@ -145,19 +131,24 @@ x509_get_pk_bit_len (crypto_x509_t *x509, size_t *size)
     {
       prlog (PR_ERR, "ERROR: Failed to extract key length from RSA public key "
                      "of x509\n");
-      EVP_PKEY_free (pub);
-      return SV_X509_ERROR;
+      EVP_PKEY_free(pub);
+      goto err_out;
     }
 
   EVP_PKEY_free (pub);
-  *size = length;
-  return SV_SUCCESS;
+  return length;
+
+err_out:
+  rc = ERR_get_error();
+  // if no error then make a reasonable one
+  rc = !rc ? ERR_PACK(ERR_LIB_X509, 0, X509_R_UNABLE_TO_GET_CERTS_PUBLIC_KEY) : rc;
+  // make sure negative
+  return rc > 0 ? rc * -1 : rc;
 }
 
-static int
-x509_get_sig_len (crypto_x509_t *x509, size_t *len)
+int crypto_x509_get_sig_len (crypto_x509_t *x509)
 {
-  int rc = SV_SUCCESS;
+  int rc;
   ASN1_BIT_STRING *sig;
 
   sig = X509_get0_pubkey_bitstr (x509);
@@ -173,9 +164,7 @@ x509_get_sig_len (crypto_x509_t *x509, size_t *len)
       return rc;
     }
 
-  *len = sig->length;
-
-  return rc;
+  return sig->length;
 }
 
 static int
@@ -875,13 +864,10 @@ pkcs7_func_t crypto_pkcs7 = { .parse_der = pkcs7_parse_der,
 #endif
                               .free = pkcs7_free };
 
-x509_func_t crypto_x509 = { .get_der_len = x509_get_der_len,
-                            .get_tbs_der_len = x509_get_tbs_der_len,
+x509_func_t crypto_x509 = {
                             .oid_is_pkcs1_sha256 = x509_oid_is_pkcs1_sha256,
                             .get_version = x509_get_version,
                             .is_RSA = x509_is_RSA,
-                            .get_pk_bit_len = x509_get_pk_bit_len,
-                            .get_sig_len = x509_get_sig_len,
                             .parse_der = x509_parse_der,
                             .error_string = error_string,
 #ifdef SECVAR_CRYPTO_WRITE_FUNC

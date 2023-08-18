@@ -25,19 +25,18 @@ get_x509_certificate (const uint8_t *cert_data, size_t cert_data_size, crypto_x5
 static int
 validate_x509_certificate (crypto_x509_t *x509)
 {
-  size_t bit_len = 0;
-  int rc;
+  int len = 0;
 
   if (x509 == NULL)
-    return SV_X509_ERROR;
+    return SV_UNEXPECTED_CERT_SIZE;
 
-  rc = crypto_x509.get_der_len (x509, &bit_len);
-  if (rc != SV_SUCCESS || bit_len == 0)
-    return rc;
+  len = crypto_x509_get_der_len (x509);
+  if (len <= 0)
+    return SV_UNEXPECTED_CRYPTO_ERROR;
 
-  rc = crypto_x509.get_tbs_der_len (x509, &bit_len);
-  if (rc != SV_SUCCESS || bit_len == 0)
-    return rc;
+  len = crypto_x509_get_tbs_der_len (x509);
+  if (len <= 0)
+    return SV_UNEXPECTED_CRYPTO_ERROR;
 
   if (crypto_x509.get_version (x509) != 3)
     return SV_X509_ERROR;
@@ -45,15 +44,13 @@ validate_x509_certificate (crypto_x509_t *x509)
   if (!crypto_x509.is_RSA (x509))
     return SV_UNEXPECTED_CERT_ALGO;
 
-  rc = crypto_x509.get_sig_len (x509, &bit_len);
-  if (rc != SV_SUCCESS || bit_len == 0)
-    return rc;
+  len = crypto_x509_get_sig_len (x509);
+  if (len <= 0)
+    /* dont want to accidentally return 0 (SUCCESS) */
+    return len ? len : SV_UNEXPECTED_CRYPTO_ERROR;
 
-  rc = crypto_x509.get_pk_bit_len (x509, &bit_len);
-  if (rc != SV_SUCCESS)
-    return rc;
-
-  if (bit_len != 2048 && bit_len != 4096)
+  len = crypto_x509_get_pk_bit_len (x509);
+  if (len != 2048 && len != 4096)
     return SV_UNEXPECTED_CERT_SIZE;
 
   return SV_SUCCESS;
