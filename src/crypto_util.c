@@ -131,12 +131,6 @@ generate_md_hash (const uint8_t *data, const size_t data_size, const int hash_ty
   return SV_SUCCESS;
 }
 
-static void
-error_string (int rc, char *out_str, size_t out_max_len)
-{
-  crypto_x509.error_string (rc, out_str, out_max_len);
-}
-
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 static int
 read_x509_certificate_info (const char *delim, crypto_x509_t *x509, size_t max_len, char **x509_info)
@@ -239,5 +233,4 @@ crypto_func_t crypto = { .generate_md_hash = generate_md_hash,
                          .release_x509_certificate = release_x509_certificate,
                          .verify_pkcs7_signature = verify_pkcs7_signature,
                          .pkcs7_md_is_sha256 = pkcs7_md_is_sha256,
-                         .error_string = error_string
                          };

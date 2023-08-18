@@ -14,6 +14,9 @@
 #include <openssl/x509.h>
 #include <openssl/evp.h>
 
+#define OPENSSL_SUCCESS 0
+#define CRYPTO_SUCCESS OPENSSL_SUCCESS
+
 #define CRYPTO_MD_SHA1 NID_sha1
 #define CRYPTO_MD_SHA224 NID_sha224
 #define CRYPTO_MD_SHA256 NID_sha256
@@ -72,6 +75,17 @@ int crypto_x509_get_version (crypto_x509_t *x509);
 
 bool crypto_x509_is_RSA (crypto_x509_t *x509);
 
+
+/**====================General Functions ====================**/
+
+/*
+ * accepts an error code from crypto backend and returns a string describing it
+ * @param rc , the error code
+ * @param out_str , an already allocated string, will be filled with string describing the error code
+ * @out_max_len , the number of bytes allocated to out_str
+ */
+void crypto_strerror (int rc, char *out_str, size_t out_max_len);
+
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 typedef void (*crypto_x509_short_info) (crypto_x509_t *, char *, size_t);
 typedef int (*convert_pem_to_der) (const unsigned char *, size_t, unsigned char **, size_t *);
@@ -110,7 +124,6 @@ struct pkcs7_func
   crypto_pkcs7_free free;
   crypto_pkcs7_signed_hash_verify signed_hash_verify;
   crypto_pkcs7_get_signing_cert get_signing_cert;
-  crypto_str_error error_string;
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
   crypto_pkcs7_generate_w_signature generate_w_signature;
   crypto_pkcs7_generate_w_already_signed_data generate_w_already_signed_data;
@@ -127,7 +140,6 @@ struct md_func
   crypto_md_free free;
   crypto_md_hash_free hash_free;
   crypto_md_generate_hash generate_hash;
-  crypto_str_error error_string;
 };
 
 typedef struct md_func md_func_t;
@@ -136,7 +148,6 @@ struct x509_func
 {
   crypto_x509_is_pkcs1_sha256 oid_is_pkcs1_sha256;
   crypto_x509_parse_der_cert parse_der;
-  crypto_str_error error_string;
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
   crypto_x509_short_info get_short_info;
   crypto_x509_cert_long_desc get_long_desc;
@@ -189,7 +200,6 @@ struct crypto
   release_pkcs7_cert release_pkcs7_certificate;
   verify_pkcs7 verify_pkcs7_signature;
   pkcs7_md pkcs7_md_is_sha256;
-  crypto_str_error error_string;
 };
 
 typedef struct crypto crypto_func_t;

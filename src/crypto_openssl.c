@@ -402,8 +402,7 @@ out:
   return SV_FAILED_TO_VERIFY_SIGNATURE;
 }
 
-static void
-error_string (int rc, char *out_str, size_t out_max_len)
+void crypto_strerror (int rc, char *out_str, size_t out_max_len)
 {
   ERR_error_string_n (rc, out_str, out_max_len);
 }
@@ -826,13 +825,12 @@ md_func_t crypto_md = { .init = md_ctx_init,
                         .free = md_free,
                         .hash_free = md_hash_free,
                         .generate_hash = md_generate_hash,
-                        .error_string = error_string };
+                         };
 
 pkcs7_func_t crypto_pkcs7 = { .parse_der = pkcs7_parse_der,
                               .md_is_sha256 = pkcs7_md_is_sha256,
                               .get_signing_cert = pkcs7_get_signing_cert,
                               .signed_hash_verify = pkcs7_signed_hash_verify,
-                              .error_string = error_string,
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
                               .generate_w_signature = pkcs7_generate_w_signature,
                               .generate_w_already_signed_data =
@@ -843,7 +841,6 @@ pkcs7_func_t crypto_pkcs7 = { .parse_der = pkcs7_parse_der,
 x509_func_t crypto_x509 = {
                             .oid_is_pkcs1_sha256 = x509_oid_is_pkcs1_sha256,
                             .parse_der = x509_parse_der,
-                            .error_string = error_string,
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
                             .get_short_info = x509_get_short_info,
                             .md_is_sha256 = x509_md_is_sha256,
