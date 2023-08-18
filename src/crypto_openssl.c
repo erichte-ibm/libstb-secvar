@@ -36,8 +36,7 @@ int crypto_x509_get_tbs_der_len (crypto_x509_t *x509)
   return i2d_re_X509_tbs (x509, NULL);
 }
 
-static int
-x509_get_version (crypto_x509_t *x509)
+int crypto_x509_get_version (crypto_x509_t *x509)
 {
   /*
    * add one because function return one less than actual certificate version,
@@ -866,7 +865,6 @@ pkcs7_func_t crypto_pkcs7 = { .parse_der = pkcs7_parse_der,
 
 x509_func_t crypto_x509 = {
                             .oid_is_pkcs1_sha256 = x509_oid_is_pkcs1_sha256,
-                            .get_version = x509_get_version,
                             .is_RSA = x509_is_RSA,
                             .parse_der = x509_parse_der,
                             .error_string = error_string,
