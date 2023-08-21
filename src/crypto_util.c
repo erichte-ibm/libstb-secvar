@@ -164,20 +164,6 @@ generate_pkcs7_signature (uint8_t *data, size_t size, uint8_t **sign_certs,
   return SV_SUCCESS;
 }
 
-static int
-get_signing_cert_from_pkcs7 (crypto_pkcs7_t *pkcs7, int cert_num, crypto_x509_t **x509)
-{
-  crypto_x509_t *cert;
-
-  cert = crypto_pkcs7.get_signing_cert (pkcs7, cert_num);
-  if (cert == NULL)
-    return SV_PKCS7_ERROR;
-
-  *x509 = cert;
-
-  return SV_SUCCESS;
-}
-
 hash_func_t hash_functions[] = {
   { .name = "SHA1", .size = 20, .crypto_md_funct = CRYPTO_MD_SHA1, .guid = &PKS_CERT_SHA1_GUID },
   { .name = "SHA224", .size = 28, .crypto_md_funct = CRYPTO_MD_SHA224, .guid = &PKS_CERT_SHA224_GUID },
@@ -199,7 +185,6 @@ crypto_func_t crypto = { .generate_md_hash = generate_md_hash,
                          .generate_pkcs7_from_signed_data = generate_pkcs7_from_signed_data,
                          .read_x509_certificate_info = read_x509_certificate_info,
                          .get_der_from_pem = get_der_from_pem,
-                         .get_signing_cert_from_pkcs7 = get_signing_cert_from_pkcs7,
 #endif
                          .get_pkcs7_certificate = get_pkcs7_certificate,
                          .validate_x509_certificate = validate_x509_certificate,

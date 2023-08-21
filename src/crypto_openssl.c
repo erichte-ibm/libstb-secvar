@@ -242,8 +242,8 @@ void crypto_pkcs7_free (crypto_pkcs7_t *pkcs7)
   PKCS7_free (pkcs7);
 }
 
-static crypto_x509_t *
-pkcs7_get_signing_cert (crypto_pkcs7_t *pkcs7, int cert_num)
+#ifdef SECVAR_CRYPTO_WRITE_FUNC
+crypto_x509_t *crypto_pkcs7_get_signing_cert (crypto_pkcs7_t *pkcs7, int cert_num)
 {
   X509 *pkcs7_cert = NULL;
 
@@ -251,6 +251,7 @@ pkcs7_get_signing_cert (crypto_pkcs7_t *pkcs7, int cert_num)
 
   return pkcs7_cert;
 }
+#endif
 
 /*
  * currently this function works and the mbedtls version currently perform the following steps
@@ -802,7 +803,6 @@ md_func_t crypto_md = { .init = md_ctx_init,
                          };
 
 pkcs7_func_t crypto_pkcs7 = {
-                              .get_signing_cert = pkcs7_get_signing_cert,
                               .signed_hash_verify = pkcs7_signed_hash_verify,
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
                               .generate_w_signature = pkcs7_generate_w_signature,
