@@ -60,20 +60,21 @@ static int
 get_pkcs7_certificate (const uint8_t *cert_data, size_t cert_data_len, crypto_pkcs7_t **pkcs7_cert)
 {
   crypto_pkcs7_t *pkcs7;
-  int rc;
 
   pkcs7 = crypto_pkcs7_parse_der (cert_data, cert_data_len);
   if (!pkcs7)
     return SV_PKCS7_PARSE_ERROR;
 
   /* make sure digest alg is sha256 */
-  rc = crypto_pkcs7.md_is_sha256 (pkcs7);
-  if (rc != SV_SUCCESS)
-    return rc;
+  if (crypto_pkcs7_md_is_sha256 (pkcs7) != CRYPTO_SUCCESS)
+  {
+    crypto_pkcs7_free(pkcs7);
+    return SV_UNEXPECTED_PKCS7_ALGO;
+  }
 
   *pkcs7_cert = pkcs7;
 
-  return rc;
+  return SV_SUCCESS;
 }
 
 static int
@@ -82,18 +83,6 @@ verify_pkcs7_signature (crypto_pkcs7_t *pkcs7, crypto_x509_t *x509, unsigned cha
   int rc;
 
   rc = crypto_pkcs7.signed_hash_verify (pkcs7, x509, hash, hash_len);
-  if (rc != SV_SUCCESS)
-    return rc;
-
-  return SV_SUCCESS;
-}
-
-static int
-pkcs7_md_is_sha256 (crypto_pkcs7_t *pkcs7)
-{
-  int rc;
-
-  rc = crypto_pkcs7.md_is_sha256 (pkcs7);
   if (rc != SV_SUCCESS)
     return rc;
 
@@ -216,5 +205,4 @@ crypto_func_t crypto = { .generate_md_hash = generate_md_hash,
                          .validate_x509_certificate = validate_x509_certificate,
                          .get_x509_certificate = get_x509_certificate,
                          .verify_pkcs7_signature = verify_pkcs7_signature,
-                         .pkcs7_md_is_sha256 = pkcs7_md_is_sha256,
                          };

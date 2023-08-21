@@ -165,8 +165,8 @@ verify_signature (const auth_data_t *auth_data, const timestamp_t *timestamp,
     }
 
   /* Only SHA-256 is permitted */
-  rc = crypto.pkcs7_md_is_sha256 (pkcs7);
-  if (rc != SV_SUCCESS)
+  rc = crypto_pkcs7_md_is_sha256 (pkcs7);
+  if (rc != CRYPTO_SUCCESS)
     {
       prlog (PR_ERR, "PKCS#7 message wasn't SHA-256.\n");
       rc = SV_UNEXPECTED_PKCS7_ALGO;

@@ -46,6 +46,13 @@ void crypto_pkcs7_free (crypto_pkcs7_t *pkcs7);
  */
 crypto_pkcs7_t *crypto_pkcs7_parse_der (const unsigned char *buf, const int buflen);
 
+/*
+ * checks the pkcs7 struct for using SHA256 as the message digest
+ * @param pkcs7 , a pointer to either a pkcs7 struct
+ * @return CRYPTO_SUCCESS if message digest is SHA256 else return errno
+ */
+int crypto_pkcs7_md_is_sha256 (crypto_pkcs7_t *pkcs7);
+
 /**====================X509 Functions ====================**/
 typedef crypto_x509_t *(*crypto_x509_parse_der_cert) (const unsigned char *, size_t);
 typedef void (*crypto_str_error) (int, char *, size_t);
@@ -126,7 +133,6 @@ typedef void (*crypto_md_hash_free) (unsigned char *);
 typedef int (*crypto_md_generate_hash) (const unsigned char *, size_t, int, unsigned char **, size_t *);
 
 /* PKCS7 */
-typedef int (*crypto_pkcs7_md_sha256) (crypto_pkcs7_t *);
 typedef crypto_x509_t *(*crypto_pkcs7_get_signing_cert) (crypto_pkcs7_t *, int);
 typedef int (*crypto_pkcs7_signed_hash_verify) (crypto_pkcs7_t *, crypto_x509_t *,
                                                 unsigned char *, int);
@@ -141,7 +147,6 @@ typedef int (*crypto_pkcs7_generate_w_already_signed_data) (unsigned char **, si
 
 struct pkcs7_func
 {
-  crypto_pkcs7_md_sha256 md_is_sha256;
   crypto_pkcs7_signed_hash_verify signed_hash_verify;
   crypto_pkcs7_get_signing_cert get_signing_cert;
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
@@ -189,7 +194,6 @@ typedef int (*get_pkcs7_cert) (const uint8_t *, size_t, crypto_pkcs7_t **);
 typedef int (*validate_x509_cert) (crypto_x509_t *);
 typedef int (*get_x509_cer) (const uint8_t *, size_t, crypto_x509_t **);
 typedef int (*verify_pkcs7) (crypto_pkcs7_t *, crypto_x509_t *, unsigned char *, int);
-typedef int (*pkcs7_md) (crypto_pkcs7_t *);
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 typedef int (*generate_pkcs7_sig) (uint8_t *, size_t, uint8_t **, uint8_t **, size_t, uint8_t **, size_t *);
@@ -213,7 +217,6 @@ struct crypto
   validate_x509_cert validate_x509_certificate;
   get_x509_cer get_x509_certificate;
   verify_pkcs7 verify_pkcs7_signature;
-  pkcs7_md pkcs7_md_is_sha256;
 };
 
 typedef struct crypto crypto_func_t;

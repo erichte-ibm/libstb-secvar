@@ -211,9 +211,9 @@ crypto_pkcs7_t *crypto_pkcs7_parse_der (const unsigned char *buf, const int bufl
   return pkcs7;
 }
 
-static int
-pkcs7_md_is_sha256 (crypto_pkcs7_t *pkcs7)
+int crypto_pkcs7_md_is_sha256 (crypto_pkcs7_t *pkcs7)
 {
+  int rc;
   X509_ALGOR *alg;
   /*
    * extract signer algorithms from pkcs7
@@ -225,14 +225,16 @@ pkcs7_md_is_sha256 (crypto_pkcs7_t *pkcs7)
     {
       prlog (PR_ERR, "ERROR: Could not extract message digest identifiers from "
                      "PKCS7\n");
-      return SV_PKCS7_ERROR;
+      rc = ERR_get_error();
+      return !rc ? ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_UNKNOWN_DIGEST_TYPE) : rc;
     }
 
   /* extract nid from algorithms and ensure it is the same nid as SHA256 */
   if (OBJ_obj2nid (alg->algorithm) == NID_sha256)
-    return SV_SUCCESS;
-  else
-    return SV_UNEXPECTED_PKCS7_ALGO;
+    return OPENSSL_SUCCESS;
+  
+  rc = ERR_get_error();
+  return !rc ? ERR_PACK(ERR_LIB_PKCS7, 0,PKCS7_R_DIGEST_FAILURE) : rc;
 }
 
 void crypto_pkcs7_free (crypto_pkcs7_t *pkcs7)
@@ -800,7 +802,6 @@ md_func_t crypto_md = { .init = md_ctx_init,
                          };
 
 pkcs7_func_t crypto_pkcs7 = {
-                              .md_is_sha256 = pkcs7_md_is_sha256,
                               .get_signing_cert = pkcs7_get_signing_cert,
                               .signed_hash_verify = pkcs7_signed_hash_verify,
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
