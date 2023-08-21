@@ -176,9 +176,6 @@ pkcs7_parse_der (const unsigned char *buf, const int buflen, crypto_pkcs7_t **ou
   int rc;
   PKCS7 *pkcs7;
 
-  uint8_t *data = NULL, *data_orig;
-  int len;
-
   pkcs7 = d2i_PKCS7 (NULL, &buf, buflen);
   if (!pkcs7)
     {
@@ -188,16 +185,21 @@ pkcs7_parse_der (const unsigned char *buf, const int buflen, crypto_pkcs7_t **ou
        * given a signedData instead of a full message.
        */
       signed_data = d2i_PKCS7_SIGNED (NULL, &buf, buflen);
-      if (signed_data)
-        {
-          *out = signed_data;
-          return SV_SUCCESS;
-        }
-      else
+      if (!signed_data)
         {
           prlog (PR_ERR, "ERROR: parsing PKCS7 with OpenSSL failed\n");
           return SV_PKCS7_PARSE_ERROR;
         }
+      /* allocate PKCS7 for signed data to be stored in */
+      pkcs7 = PKCS7_new();
+      if (!pkcs7)
+        {
+          prlog (PR_ERR, "ERROR: PKCS7 allocation failed\n");
+          PKCS7_SIGNED_free(signed_data);
+          return SV_PKCS7_PARSE_ERROR;
+        }
+      pkcs7->type = OBJ_nid2obj(NID_pkcs7_signed);
+      pkcs7->d.sign = signed_data;
     }
 
   /* make sure it contains signed data, openssl supports other types */
@@ -209,26 +211,8 @@ pkcs7_parse_der (const unsigned char *buf, const int buflen, crypto_pkcs7_t **ou
       goto out;
     }
 
-  rc = SV_SUCCESS;
-  /* create a standalone copy of just the SIGNED part */
-  len = i2d_PKCS7_SIGNED (pkcs7->d.sign, &data);
-  if (len < 0)
-    {
-      prlog (PR_ERR, "ERROR: OpenSSL could not convert signed part to DER: %d\n", len);
-      rc = SV_UNEXPECTED_CRYPTO_ERROR;
-      goto out;
-    }
-
-  data_orig = data;
-  *out = d2i_PKCS7_SIGNED (NULL, (const uint8_t **) &data, len);
-  if (!*out)
-    {
-      prlog (PR_ERR,
-             "ERROR: OpenSSL could not parse its own signed part DER!\n");
-      rc = SV_UNEXPECTED_CRYPTO_ERROR;
-    }
-
-  OPENSSL_free (data_orig);
+  *out = pkcs7;
+  return SV_SUCCESS;
 
 out:
   PKCS7_free (pkcs7);
@@ -245,7 +229,7 @@ pkcs7_md_is_sha256 (crypto_pkcs7_t *pkcs7)
    * we successfully parsed the PKCS#7 message so we do not expect
    * this to fail
    */
-  alg = sk_X509_ALGOR_value (pkcs7->md_algs, 0);
+  alg = sk_X509_ALGOR_value (pkcs7->d.sign->md_algs, 0);
   if (!alg)
     {
       prlog (PR_ERR, "ERROR: Could not extract message digest identifiers from "
@@ -262,7 +246,7 @@ pkcs7_md_is_sha256 (crypto_pkcs7_t *pkcs7)
 
 void crypto_pkcs7_free (crypto_pkcs7_t *pkcs7)
 {
-  PKCS7_SIGNED_free (pkcs7);
+  PKCS7_free (pkcs7);
 }
 
 static crypto_x509_t *
@@ -270,7 +254,7 @@ pkcs7_get_signing_cert (crypto_pkcs7_t *pkcs7, int cert_num)
 {
   X509 *pkcs7_cert = NULL;
 
-  pkcs7_cert = sk_X509_value (pkcs7->cert, cert_num);
+  pkcs7_cert = sk_X509_value (pkcs7->d.sign->cert, cert_num);
 
   return pkcs7_cert;
 }
@@ -313,7 +297,7 @@ pkcs7_signed_hash_verify (crypto_pkcs7_t *pkcs7, crypto_x509_t *x509, unsigned c
       goto out;
     }
   /* extract signer algorithms from pkcs7 */
-  alg = sk_X509_ALGOR_value (pkcs7->md_algs, 0);
+  alg = sk_X509_ALGOR_value (pkcs7->d.sign->md_algs, 0);
   if (!alg)
     {
       prlog (PR_ERR, "ERROR: Could not extract message digest identifiers from "
@@ -346,7 +330,7 @@ pkcs7_signed_hash_verify (crypto_pkcs7_t *pkcs7, crypto_x509_t *x509, unsigned c
     }
 
   /* verify on all signatures in pkcs7 */
-  num_signers = sk_PKCS7_SIGNER_INFO_num (pkcs7->signer_info);
+  num_signers = sk_PKCS7_SIGNER_INFO_num (PKCS7_get_signer_info (pkcs7));
   if (num_signers == 0)
     {
       prlog (PR_ERR, "ERROR: no signers to verify");
@@ -363,7 +347,7 @@ pkcs7_signed_hash_verify (crypto_pkcs7_t *pkcs7, crypto_x509_t *x509, unsigned c
   for (int s = 0; s < num_signers; s++)
     {
       /* make sure we can get the signature data */
-      signer_info = sk_PKCS7_SIGNER_INFO_value (pkcs7->signer_info, s);
+      signer_info = sk_PKCS7_SIGNER_INFO_value (PKCS7_get_signer_info (pkcs7), s);
 
       if (!signer_info)
         {

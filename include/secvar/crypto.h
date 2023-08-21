@@ -23,7 +23,7 @@
 #define CRYPTO_MD_SHA384 NID_sha384
 #define CRYPTO_MD_SHA512 NID_sha512
 
-typedef PKCS7_SIGNED crypto_pkcs7_t;
+typedef PKCS7 crypto_pkcs7_t;
 typedef X509 crypto_x509_t;
 typedef EVP_MD_CTX crypto_md_ctx_t;
 #else
