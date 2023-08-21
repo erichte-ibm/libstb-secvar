@@ -170,10 +170,8 @@ void crypto_x509_free (crypto_x509_t *x509)
   X509_free (x509);
 }
 
-static int
-pkcs7_parse_der (const unsigned char *buf, const int buflen, crypto_pkcs7_t **out)
+crypto_pkcs7_t *crypto_pkcs7_parse_der (const unsigned char *buf, const int buflen)
 {
-  int rc;
   PKCS7 *pkcs7;
 
   pkcs7 = d2i_PKCS7 (NULL, &buf, buflen);
@@ -188,7 +186,7 @@ pkcs7_parse_der (const unsigned char *buf, const int buflen, crypto_pkcs7_t **ou
       if (!signed_data)
         {
           prlog (PR_ERR, "ERROR: parsing PKCS7 with OpenSSL failed\n");
-          return SV_PKCS7_PARSE_ERROR;
+          return NULL;
         }
       /* allocate PKCS7 for signed data to be stored in */
       pkcs7 = PKCS7_new();
@@ -196,28 +194,21 @@ pkcs7_parse_der (const unsigned char *buf, const int buflen, crypto_pkcs7_t **ou
         {
           prlog (PR_ERR, "ERROR: PKCS7 allocation failed\n");
           PKCS7_SIGNED_free(signed_data);
-          return SV_PKCS7_PARSE_ERROR;
+          return NULL;
         }
       pkcs7->type = OBJ_nid2obj(NID_pkcs7_signed);
       pkcs7->d.sign = signed_data;
     }
 
   /* make sure it contains signed data, openssl supports other types */
-  rc = PKCS7_type_is_signed (pkcs7);
-  if (!rc)
+  if (!PKCS7_type_is_signed (pkcs7))
     {
       prlog (PR_ERR, "ERROR: PKCS7 does not contain signed data\n");
-      rc = SV_PKCS7_PARSE_ERROR;
-      goto out;
+      PKCS7_free (pkcs7);
+      return NULL;
     }
 
-  *out = pkcs7;
-  return SV_SUCCESS;
-
-out:
-  PKCS7_free (pkcs7);
-
-  return rc;
+  return pkcs7;
 }
 
 static int
@@ -808,7 +799,7 @@ md_func_t crypto_md = { .init = md_ctx_init,
                         .generate_hash = md_generate_hash,
                          };
 
-pkcs7_func_t crypto_pkcs7 = { .parse_der = pkcs7_parse_der,
+pkcs7_func_t crypto_pkcs7 = {
                               .md_is_sha256 = pkcs7_md_is_sha256,
                               .get_signing_cert = pkcs7_get_signing_cert,
                               .signed_hash_verify = pkcs7_signed_hash_verify,

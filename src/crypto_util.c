@@ -59,12 +59,12 @@ validate_x509_certificate (crypto_x509_t *x509)
 static int
 get_pkcs7_certificate (const uint8_t *cert_data, size_t cert_data_len, crypto_pkcs7_t **pkcs7_cert)
 {
-  crypto_pkcs7_t *pkcs7 = NULL;
+  crypto_pkcs7_t *pkcs7;
   int rc;
 
-  rc = crypto_pkcs7.parse_der (cert_data, cert_data_len, &pkcs7);
-  if (rc != SV_SUCCESS)
-    return rc;
+  pkcs7 = crypto_pkcs7_parse_der (cert_data, cert_data_len);
+  if (!pkcs7)
+    return SV_PKCS7_PARSE_ERROR;
 
   /* make sure digest alg is sha256 */
   rc = crypto_pkcs7.md_is_sha256 (pkcs7);

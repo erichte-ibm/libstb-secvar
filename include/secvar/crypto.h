@@ -37,6 +37,15 @@ typedef EVP_MD_CTX crypto_md_ctx_t;
  */
 void crypto_pkcs7_free (crypto_pkcs7_t *pkcs7);
 
+/*
+ *parses a buffer into a pointer to a pkcs7 struct. struct allocation is done internally to this func, but not dealloc
+ *@param buf, buffer of data containg pkcs7 data or pkcs7 signed data
+ *@param buflen, length of buf
+ *@return if successful, a pointer to a pkcs7 struct. else returns NULL
+ *NOTE: if successful (returns not NULL), remember to call crypto_free_pkcs7 to unalloc. 
+ */
+crypto_pkcs7_t *crypto_pkcs7_parse_der (const unsigned char *buf, const int buflen);
+
 /**====================X509 Functions ====================**/
 typedef crypto_x509_t *(*crypto_x509_parse_der_cert) (const unsigned char *, size_t);
 typedef void (*crypto_str_error) (int, char *, size_t);
@@ -117,7 +126,6 @@ typedef void (*crypto_md_hash_free) (unsigned char *);
 typedef int (*crypto_md_generate_hash) (const unsigned char *, size_t, int, unsigned char **, size_t *);
 
 /* PKCS7 */
-typedef int (*crypto_pkcs7_parse_der) (const unsigned char *, const int, crypto_pkcs7_t **);
 typedef int (*crypto_pkcs7_md_sha256) (crypto_pkcs7_t *);
 typedef crypto_x509_t *(*crypto_pkcs7_get_signing_cert) (crypto_pkcs7_t *, int);
 typedef int (*crypto_pkcs7_signed_hash_verify) (crypto_pkcs7_t *, crypto_x509_t *,
@@ -133,7 +141,6 @@ typedef int (*crypto_pkcs7_generate_w_already_signed_data) (unsigned char **, si
 
 struct pkcs7_func
 {
-  crypto_pkcs7_parse_der parse_der;
   crypto_pkcs7_md_sha256 md_is_sha256;
   crypto_pkcs7_signed_hash_verify signed_hash_verify;
   crypto_pkcs7_get_signing_cert get_signing_cert;
