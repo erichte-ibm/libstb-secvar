@@ -56,13 +56,6 @@ validate_x509_certificate (crypto_x509_t *x509)
   return SV_SUCCESS;
 }
 
-static void
-release_x509_certificate (crypto_x509_t *x509)
-{
-  if (x509)
-    crypto_x509.free (x509);
-}
-
 static int
 get_pkcs7_certificate (const uint8_t *cert_data, size_t cert_data_len, crypto_pkcs7_t **pkcs7_cert)
 {
@@ -105,13 +98,6 @@ pkcs7_md_is_sha256 (crypto_pkcs7_t *pkcs7)
     return rc;
 
   return SV_SUCCESS;
-}
-
-static void
-release_pkcs7_certificate (crypto_pkcs7_t *pkcs7)
-{
-  if (pkcs7)
-    crypto_pkcs7.free (pkcs7);
 }
 
 static int
@@ -229,8 +215,6 @@ crypto_func_t crypto = { .generate_md_hash = generate_md_hash,
                          .get_pkcs7_certificate = get_pkcs7_certificate,
                          .validate_x509_certificate = validate_x509_certificate,
                          .get_x509_certificate = get_x509_certificate,
-                         .release_pkcs7_certificate = release_pkcs7_certificate,
-                         .release_x509_certificate = release_x509_certificate,
                          .verify_pkcs7_signature = verify_pkcs7_signature,
                          .pkcs7_md_is_sha256 = pkcs7_md_is_sha256,
                          };

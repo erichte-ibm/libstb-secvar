@@ -128,18 +128,18 @@ cert_parses_as_good_RSA (const uint8_t *cert_data, size_t cert_size, const bool 
   if (rc != SV_SUCCESS)
     {
       prlog (PR_ERR, "certificate validation failed (%d)\n", rc);
-      crypto.release_x509_certificate (cert);
+      crypto_x509_free (cert);
       return false;
     }
 
   if (check_CA && !crypto_x509_is_CA (cert))
     {
       prlog (PR_ERR, "it is not CA certificate\n");
-      crypto.release_x509_certificate (cert);
+      crypto_x509_free (cert);
       return false;
     }
 
-  crypto.release_x509_certificate (cert);
+  crypto_x509_free (cert);
 
   return true;
 }

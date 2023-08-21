@@ -165,8 +165,7 @@ int crypto_x509_oid_is_pkcs1_sha256 (crypto_x509_t *x509)
   return OPENSSL_SUCCESS;
 }
 
-static void
-x509_free (crypto_x509_t *x509)
+void crypto_x509_free (crypto_x509_t *x509)
 {
   X509_free (x509);
 }
@@ -261,8 +260,7 @@ pkcs7_md_is_sha256 (crypto_pkcs7_t *pkcs7)
     return SV_UNEXPECTED_PKCS7_ALGO;
 }
 
-static void
-pkcs7_free (crypto_pkcs7_t *pkcs7)
+void crypto_pkcs7_free (crypto_pkcs7_t *pkcs7)
 {
   PKCS7_SIGNED_free (pkcs7);
 }
@@ -835,7 +833,7 @@ pkcs7_func_t crypto_pkcs7 = { .parse_der = pkcs7_parse_der,
                               .generate_w_already_signed_data =
                                       pkcs7_generate_w_already_signed_data,
 #endif
-                              .free = pkcs7_free };
+                            };
 
 x509_func_t crypto_x509 = {
                             .parse_der = x509_parse_der,
@@ -845,4 +843,4 @@ x509_func_t crypto_x509 = {
                             .get_long_desc = x509_get_long_desc,
                             .pem_to_der = x509_convert_pem_to_der,
 #endif
-                            .free = x509_free };
+                          };

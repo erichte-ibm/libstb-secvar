@@ -66,7 +66,7 @@ verify_aginst_pk (const auth_db_t *auth_db, crypto_pkcs7_t *pkcs7,
       if (rc != SV_SUCCESS)
         {
           prlog (PR_ERR, "PK cert is not a good RSA cert.\n");
-          crypto.release_x509_certificate (pk);
+          crypto_x509_free (pk);
           return rc;
         }
 
@@ -75,7 +75,7 @@ verify_aginst_pk (const auth_db_t *auth_db, crypto_pkcs7_t *pkcs7,
        * sha256 above.
        */
       rc = crypto.verify_pkcs7_signature (pkcs7, pk, hash, MAX_HASH_SIZE);
-      crypto.release_x509_certificate (pk);
+      crypto_x509_free (pk);
       if (rc != SV_SUCCESS)
         return SV_FAILED_TO_VERIFY_SIGNATURE;
       else
@@ -119,12 +119,12 @@ verify_aginst_kek (const auth_db_t *auth_db, crypto_pkcs7_t *pkcs7,
           if (rc != SV_SUCCESS)
             {
               prlog (PR_ERR, "KEK cert is not a good RSA cert.\n");
-              crypto.release_x509_certificate (kek);
+              crypto_x509_free (kek);
               return rc;
             }
 
           rc = crypto.verify_pkcs7_signature (pkcs7, kek, hash, MAX_HASH_SIZE);
-          crypto.release_x509_certificate (kek);
+          crypto_x509_free (kek);
           if (rc == SV_SUCCESS)
             {
               *verified_flag = SV_AUTH_VERIFIED_BY_KEK;
@@ -191,7 +191,7 @@ verify_signature (const auth_data_t *auth_data, const timestamp_t *timestamp,
         }
     }
 
-  crypto.release_pkcs7_certificate (pkcs7);
+  crypto_pkcs7_free (pkcs7);
 
   return rc;
 }

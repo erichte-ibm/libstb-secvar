@@ -30,8 +30,14 @@ typedef EVP_MD_CTX crypto_md_ctx_t;
 #error Crypto Library not defined! Define SECVAR_CRYPTO_OPENSSL
 #endif
 
-/* X509 */
-typedef void (*crypto_x509_free_cert) (crypto_x509_t *);
+/**====================PKCS7 Functions ====================**/
+/*
+ * free's the memory allocated for a pkcs7 structure
+ * @param pkcs7 , a pointer to either a pkcs7 struct
+ */
+void crypto_pkcs7_free (crypto_pkcs7_t *pkcs7);
+
+/**====================X509 Functions ====================**/
 typedef crypto_x509_t *(*crypto_x509_parse_der_cert) (const unsigned char *, size_t);
 typedef void (*crypto_str_error) (int, char *, size_t);
 
@@ -79,7 +85,11 @@ bool crypto_x509_is_RSA (crypto_x509_t *x509);
  */
 int crypto_x509_oid_is_pkcs1_sha256(crypto_x509_t *x509);
 
-
+/*
+ * unallocates x509 struct and memory
+ * @param x509 ,  a pointer to an x509 struct
+ */
+void crypto_x509_free (crypto_x509_t *x509);
 
 /**====================General Functions ====================**/
 
@@ -109,7 +119,6 @@ typedef int (*crypto_md_generate_hash) (const unsigned char *, size_t, int, unsi
 /* PKCS7 */
 typedef int (*crypto_pkcs7_parse_der) (const unsigned char *, const int, crypto_pkcs7_t **);
 typedef int (*crypto_pkcs7_md_sha256) (crypto_pkcs7_t *);
-typedef void (*crypto_pkcs7_free) (crypto_pkcs7_t *);
 typedef crypto_x509_t *(*crypto_pkcs7_get_signing_cert) (crypto_pkcs7_t *, int);
 typedef int (*crypto_pkcs7_signed_hash_verify) (crypto_pkcs7_t *, crypto_x509_t *,
                                                 unsigned char *, int);
@@ -126,7 +135,6 @@ struct pkcs7_func
 {
   crypto_pkcs7_parse_der parse_der;
   crypto_pkcs7_md_sha256 md_is_sha256;
-  crypto_pkcs7_free free;
   crypto_pkcs7_signed_hash_verify signed_hash_verify;
   crypto_pkcs7_get_signing_cert get_signing_cert;
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
@@ -158,7 +166,6 @@ struct x509_func
   crypto_x509_is_md_sha256 md_is_sha256;
   convert_pem_to_der pem_to_der;
 #endif
-  crypto_x509_free_cert free;
 };
 
 typedef struct x509_func x509_func_t;
@@ -174,8 +181,6 @@ typedef int (*generate_hash) (const uint8_t *, const size_t, const int, uint8_t 
 typedef int (*get_pkcs7_cert) (const uint8_t *, size_t, crypto_pkcs7_t **);
 typedef int (*validate_x509_cert) (crypto_x509_t *);
 typedef int (*get_x509_cer) (const uint8_t *, size_t, crypto_x509_t **);
-typedef void (*release_x509_cert) (crypto_x509_t *);
-typedef void (*release_pkcs7_cert) (crypto_pkcs7_t *);
 typedef int (*verify_pkcs7) (crypto_pkcs7_t *, crypto_x509_t *, unsigned char *, int);
 typedef int (*pkcs7_md) (crypto_pkcs7_t *);
 
@@ -200,8 +205,6 @@ struct crypto
   get_pkcs7_cert get_pkcs7_certificate;
   validate_x509_cert validate_x509_certificate;
   get_x509_cer get_x509_certificate;
-  release_x509_cert release_x509_certificate;
-  release_pkcs7_cert release_pkcs7_certificate;
   verify_pkcs7 verify_pkcs7_signature;
   pkcs7_md pkcs7_md_is_sha256;
 };
