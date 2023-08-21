@@ -32,7 +32,6 @@ typedef EVP_MD_CTX crypto_md_ctx_t;
 
 /* X509 */
 typedef void (*crypto_x509_free_cert) (crypto_x509_t *);
-typedef int (*crypto_x509_is_pkcs1_sha256) (crypto_x509_t *);
 typedef crypto_x509_t *(*crypto_x509_parse_der_cert) (const unsigned char *, size_t);
 typedef void (*crypto_str_error) (int, char *, size_t);
 
@@ -74,6 +73,12 @@ int crypto_x509_get_pk_bit_len (crypto_x509_t *x509);
 int crypto_x509_get_version (crypto_x509_t *x509);
 
 bool crypto_x509_is_RSA (crypto_x509_t *x509);
+
+/*
+ * returns CRYPTO_SUCCESS if oid is sha256
+ */
+int crypto_x509_oid_is_pkcs1_sha256(crypto_x509_t *x509);
+
 
 
 /**====================General Functions ====================**/
@@ -146,7 +151,6 @@ typedef struct md_func md_func_t;
 
 struct x509_func
 {
-  crypto_x509_is_pkcs1_sha256 oid_is_pkcs1_sha256;
   crypto_x509_parse_der_cert parse_der;
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
   crypto_x509_short_info get_short_info;

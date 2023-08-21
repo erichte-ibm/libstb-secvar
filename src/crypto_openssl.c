@@ -143,8 +143,7 @@ int crypto_x509_get_sig_len (crypto_x509_t *x509)
   return sig->length;
 }
 
-static int
-x509_oid_is_pkcs1_sha256 (crypto_x509_t *x509)
+int crypto_x509_oid_is_pkcs1_sha256 (crypto_x509_t *x509)
 {
   int rc;
   const X509_ALGOR *alg = NULL;
@@ -163,7 +162,7 @@ x509_oid_is_pkcs1_sha256 (crypto_x509_t *x509)
       return !rc ? ERR_PACK (ERR_LIB_X509, 0, X509_R_UNSUPPORTED_ALGORITHM) : rc;
     }
 
-  return SV_SUCCESS;
+  return OPENSSL_SUCCESS;
 }
 
 static void
@@ -839,7 +838,6 @@ pkcs7_func_t crypto_pkcs7 = { .parse_der = pkcs7_parse_der,
                               .free = pkcs7_free };
 
 x509_func_t crypto_x509 = {
-                            .oid_is_pkcs1_sha256 = x509_oid_is_pkcs1_sha256,
                             .parse_der = x509_parse_der,
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
                             .get_short_info = x509_get_short_info,
