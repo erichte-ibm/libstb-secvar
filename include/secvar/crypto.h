@@ -64,6 +64,17 @@ int crypto_pkcs7_md_is_sha256 (crypto_pkcs7_t *pkcs7);
 crypto_x509_t *crypto_pkcs7_get_signing_cert (crypto_pkcs7_t *pkcs7, int cert_num);
 #endif
 
+/*
+ * determines if signed data in pkcs7 is correctly signed by x509 by signing the hash with the
+ * pk and comparing the resulting signature with that in the pkcs7
+ * @param pkcs7 , a pointer to a pkcs7 struct
+ * @param x509 , a pointer to an x509 struct
+ * @param hash , the expected hash
+ * @param hash_len , the length of expected hash (ex: SHA256 = 32), if 0 then asssumptions are made based on md in pkcs7
+ * @return CRYPTO_SUCCESS or error number if resulting hashes are not equal
+ */
+int crypto_pkcs7_signed_hash_verify (crypto_pkcs7_t *pkcs7, crypto_x509_t *x509,
+                                     unsigned char *hash, int hash_len);
 /**====================X509 Functions ====================**/
 typedef crypto_x509_t *(*crypto_x509_parse_der_cert) (const unsigned char *, size_t);
 typedef void (*crypto_str_error) (int, char *, size_t);
@@ -144,8 +155,6 @@ typedef void (*crypto_md_hash_free) (unsigned char *);
 typedef int (*crypto_md_generate_hash) (const unsigned char *, size_t, int, unsigned char **, size_t *);
 
 /* PKCS7 */
-typedef int (*crypto_pkcs7_signed_hash_verify) (crypto_pkcs7_t *, crypto_x509_t *,
-                                                unsigned char *, int);
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 typedef int (*crypto_pkcs7_generate_w_signature) (unsigned char **, size_t *, const unsigned char *,
                                                   size_t, const char **, const char **, int, int);
@@ -157,7 +166,6 @@ typedef int (*crypto_pkcs7_generate_w_already_signed_data) (unsigned char **, si
 
 struct pkcs7_func
 {
-  crypto_pkcs7_signed_hash_verify signed_hash_verify;
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
   crypto_pkcs7_generate_w_signature generate_w_signature;
   crypto_pkcs7_generate_w_already_signed_data generate_w_already_signed_data;
@@ -202,7 +210,6 @@ typedef int (*generate_hash) (const uint8_t *, const size_t, const int, uint8_t 
 typedef int (*get_pkcs7_cert) (const uint8_t *, size_t, crypto_pkcs7_t **);
 typedef int (*validate_x509_cert) (crypto_x509_t *);
 typedef int (*get_x509_cer) (const uint8_t *, size_t, crypto_x509_t **);
-typedef int (*verify_pkcs7) (crypto_pkcs7_t *, crypto_x509_t *, unsigned char *, int);
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 typedef int (*generate_pkcs7_sig) (uint8_t *, size_t, uint8_t **, uint8_t **, size_t, uint8_t **, size_t *);
@@ -223,7 +230,6 @@ struct crypto
   get_pkcs7_cert get_pkcs7_certificate;
   validate_x509_cert validate_x509_certificate;
   get_x509_cer get_x509_certificate;
-  verify_pkcs7 verify_pkcs7_signature;
 };
 
 typedef struct crypto crypto_func_t;

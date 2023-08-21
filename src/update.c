@@ -74,12 +74,14 @@ verify_aginst_pk (const auth_db_t *auth_db, crypto_pkcs7_t *pkcs7,
        * we are safe to pass 32 here because we verified that it was
        * sha256 above.
        */
-      rc = crypto.verify_pkcs7_signature (pkcs7, pk, hash, MAX_HASH_SIZE);
+      rc = crypto_pkcs7_signed_hash_verify (pkcs7, pk, hash, MAX_HASH_SIZE);
       crypto_x509_free (pk);
-      if (rc != SV_SUCCESS)
+      if (rc != CRYPTO_SUCCESS)
         return SV_FAILED_TO_VERIFY_SIGNATURE;
       else
         *verified_flag = SV_AUTH_VERIFIED_BY_PK;
+
+      rc = SV_SUCCESS;
     }
 
   return rc;
@@ -123,12 +125,12 @@ verify_aginst_kek (const auth_db_t *auth_db, crypto_pkcs7_t *pkcs7,
               return rc;
             }
 
-          rc = crypto.verify_pkcs7_signature (pkcs7, kek, hash, MAX_HASH_SIZE);
+          rc = crypto_pkcs7_signed_hash_verify (pkcs7, kek, hash, MAX_HASH_SIZE);
           crypto_x509_free (kek);
-          if (rc == SV_SUCCESS)
+          if (rc == CRYPTO_SUCCESS)
             {
               *verified_flag = SV_AUTH_VERIFIED_BY_KEK;
-              return rc;
+              return SV_SUCCESS;
             }
 
           rc = next_cert_from_esls_buf (auth_db->kek, auth_db->kek_size, &cert,

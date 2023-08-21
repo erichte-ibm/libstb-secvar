@@ -78,18 +78,6 @@ get_pkcs7_certificate (const uint8_t *cert_data, size_t cert_data_len, crypto_pk
 }
 
 static int
-verify_pkcs7_signature (crypto_pkcs7_t *pkcs7, crypto_x509_t *x509, unsigned char *hash, int hash_len)
-{
-  int rc;
-
-  rc = crypto_pkcs7.signed_hash_verify (pkcs7, x509, hash, hash_len);
-  if (rc != SV_SUCCESS)
-    return rc;
-
-  return SV_SUCCESS;
-}
-
-static int
 generate_md_hash (const uint8_t *data, const size_t data_size, const int hash_type,
                   uint8_t **out_buffer, size_t *out_buffer_size)
 {
@@ -189,5 +177,4 @@ crypto_func_t crypto = { .generate_md_hash = generate_md_hash,
                          .get_pkcs7_certificate = get_pkcs7_certificate,
                          .validate_x509_certificate = validate_x509_certificate,
                          .get_x509_certificate = get_x509_certificate,
-                         .verify_pkcs7_signature = verify_pkcs7_signature,
                          };
