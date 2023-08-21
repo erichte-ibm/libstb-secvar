@@ -7,21 +7,6 @@
 #include "secvar/crypto.h"
 #include "libstb-secvar-errors.h"
 
-
-static int
-get_x509_certificate (const uint8_t *cert_data, size_t cert_data_size, crypto_x509_t **x509)
-{
-  crypto_x509_t *cert;
-
-  cert = crypto_x509.parse_der (cert_data, cert_data_size);
-  if (cert == NULL)
-    return SV_X509_PARSE_ERROR;
-
-  *x509 = cert;
-
-  return SV_SUCCESS;
-}
-
 static int
 validate_x509_certificate (crypto_x509_t *x509)
 {
@@ -176,5 +161,4 @@ crypto_func_t crypto = { .generate_md_hash = generate_md_hash,
 #endif
                          .get_pkcs7_certificate = get_pkcs7_certificate,
                          .validate_x509_certificate = validate_x509_certificate,
-                         .get_x509_certificate = get_x509_certificate,
                          };

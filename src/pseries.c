@@ -119,8 +119,8 @@ cert_parses_as_good_RSA (const uint8_t *cert_data, size_t cert_size, const bool 
   int rc;
   crypto_x509_t *cert;
 
-  rc = crypto.get_x509_certificate (cert_data, cert_size, &cert);
-  if (rc != SV_SUCCESS)
+  cert = crypto_x509_parse_der (cert_data, cert_size);
+  if (!cert)
     return false;
 
   /* must be RSA-2048/4096 */

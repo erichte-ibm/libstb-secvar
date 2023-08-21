@@ -39,7 +39,7 @@ verify_aginst_pk (const auth_db_t *auth_db, crypto_pkcs7_t *pkcs7,
   uuid_t cert_owner = { 0 };
   const uint8_t *cert = NULL;
   size_t cert_size = 0;
-  crypto_x509_t *pk = NULL;
+  crypto_x509_t *pk;
 
   if (auth_db->pk != NULL && auth_db->pk_size != 0)
     {
@@ -51,8 +51,8 @@ verify_aginst_pk (const auth_db_t *auth_db, crypto_pkcs7_t *pkcs7,
           return rc;
         }
 
-      rc = crypto.get_x509_certificate (cert, cert_size, &pk);
-      if (rc != SV_SUCCESS)
+      pk = crypto_x509_parse_der (cert, cert_size);
+      if (!pk)
         {
           prlog (PR_ERR, "Error parsing PK cert to X.509 structure");
           return SV_X509_PARSE_ERROR;
@@ -97,7 +97,7 @@ verify_aginst_kek (const auth_db_t *auth_db, crypto_pkcs7_t *pkcs7,
   uuid_t cert_owner = { 0 };
   const uint8_t *cert = NULL;
   size_t cert_size = 0;
-  crypto_x509_t *kek = NULL;
+  crypto_x509_t *kek;
 
   if (auth_db->kek != NULL && auth_db->kek_size)
     {
@@ -110,8 +110,8 @@ verify_aginst_kek (const auth_db_t *auth_db, crypto_pkcs7_t *pkcs7,
            * if a KEK fails to parse or be RSA-2048, we bail,
            * even if a later KEK might work.
            */
-          rc = crypto.get_x509_certificate (cert, cert_size, &kek);
-          if (rc != SV_SUCCESS)
+          kek = crypto_x509_parse_der (cert, cert_size);
+          if (!kek)
             {
               prlog (PR_ERR, "Error parsing KEK cert to X.509 structure");
               return SV_X509_PARSE_ERROR;

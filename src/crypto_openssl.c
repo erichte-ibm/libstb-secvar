@@ -381,16 +381,9 @@ void crypto_strerror (int rc, char *out_str, size_t out_max_len)
   ERR_error_string_n (rc, out_str, out_max_len);
 }
 
-static crypto_x509_t *
-x509_parse_der (const unsigned char *data, size_t data_len)
+crypto_x509_t *crypto_x509_parse_der (const unsigned char *data, size_t data_len)
 {
-  X509 *x509;
-  x509 = d2i_X509 (NULL, &data, data_len);
-
-  if (!x509)
-    return NULL;
-
-  return x509;
+  return d2i_X509 (NULL, &data, data_len);
 }
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
@@ -577,7 +570,7 @@ pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
           goto out;
         }
       /* get x509 from cert DER buff */
-      x509 = x509_parse_der (crt, crtSize);
+      x509 = crypto_x509_parse_der (crt, crtSize);
       if (!x509)
         {
           prlog (PR_ERR, "ERROR: Failed to parse certificate into x509 openssl "
@@ -810,7 +803,6 @@ pkcs7_func_t crypto_pkcs7 = {
                             };
 
 x509_func_t crypto_x509 = {
-                            .parse_der = x509_parse_der,
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
                             .get_short_info = x509_get_short_info,
                             .md_is_sha256 = x509_md_is_sha256,

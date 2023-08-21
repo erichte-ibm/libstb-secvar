@@ -129,6 +129,15 @@ int crypto_x509_oid_is_pkcs1_sha256(crypto_x509_t *x509);
  */
 void crypto_x509_free (crypto_x509_t *x509);
 
+/*
+ *parses a buffer into a pointer to an x509 struct. struct allocation is done internally to this func, but not dealloc
+ *@param buf, buffer of data containing x509 data in DER
+ *@param buflen, length of buf
+ *@return if successful, a pointer to an x509 struct. else returns NULL
+ *NOTE: if successful (returns not NULL), remember to call crypto_x509_free to unalloc.
+ */
+crypto_x509_t *crypto_x509_parse_der (const unsigned char *data, size_t data_len);
+
 /**====================General Functions ====================**/
 
 /*
@@ -188,7 +197,6 @@ typedef struct md_func md_func_t;
 
 struct x509_func
 {
-  crypto_x509_parse_der_cert parse_der;
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
   crypto_x509_short_info get_short_info;
   crypto_x509_cert_long_desc get_long_desc;
@@ -209,7 +217,6 @@ extern x509_func_t crypto_x509;
 typedef int (*generate_hash) (const uint8_t *, const size_t, const int, uint8_t **, size_t *);
 typedef int (*get_pkcs7_cert) (const uint8_t *, size_t, crypto_pkcs7_t **);
 typedef int (*validate_x509_cert) (crypto_x509_t *);
-typedef int (*get_x509_cer) (const uint8_t *, size_t, crypto_x509_t **);
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 typedef int (*generate_pkcs7_sig) (uint8_t *, size_t, uint8_t **, uint8_t **, size_t, uint8_t **, size_t *);
@@ -229,7 +236,6 @@ struct crypto
   generate_hash generate_md_hash;
   get_pkcs7_cert get_pkcs7_certificate;
   validate_x509_cert validate_x509_certificate;
-  get_x509_cer get_x509_certificate;
 };
 
 typedef struct crypto crypto_func_t;
