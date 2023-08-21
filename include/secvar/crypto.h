@@ -138,6 +138,11 @@ void crypto_x509_free (crypto_x509_t *x509);
  */
 crypto_x509_t *crypto_x509_parse_der (const unsigned char *data, size_t data_len);
 
+#ifdef SECVAR_CRYPTO_WRITE_FUNC
+/* return CRYPTO_SUCCESS if md of cert is sha256 */
+int crypto_x509_md_is_sha256 (crypto_x509_t *x509);
+#endif
+
 /**====================General Functions ====================**/
 
 /*
@@ -152,7 +157,6 @@ void crypto_strerror (int rc, char *out_str, size_t out_max_len);
 typedef void (*crypto_x509_short_info) (crypto_x509_t *, char *, size_t);
 typedef int (*convert_pem_to_der) (const unsigned char *, size_t, unsigned char **, size_t *);
 typedef int (*crypto_x509_cert_long_desc) (char *, size_t, const char *, crypto_x509_t *);
-typedef int (*crypto_x509_is_md_sha256) (crypto_x509_t *);
 #endif
 
 /* MD HASH */
@@ -200,7 +204,6 @@ struct x509_func
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
   crypto_x509_short_info get_short_info;
   crypto_x509_cert_long_desc get_long_desc;
-  crypto_x509_is_md_sha256 md_is_sha256;
   convert_pem_to_der pem_to_der;
 #endif
 };

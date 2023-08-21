@@ -387,8 +387,7 @@ crypto_x509_t *crypto_x509_parse_der (const unsigned char *data, size_t data_len
 }
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
-static int
-x509_md_is_sha256 (crypto_x509_t *x509)
+int crypto_x509_md_is_sha256 (crypto_x509_t *x509)
 {
   int rc;
   const X509_ALGOR *alg = NULL;
@@ -402,7 +401,7 @@ x509_md_is_sha256 (crypto_x509_t *x509)
     }
 
   if (OBJ_obj2nid (alg->algorithm) == NID_sha256WithRSAEncryption)
-    return SV_SUCCESS;
+    return OPENSSL_SUCCESS;
   else
     {
       prlog (PR_ERR, "ERROR: Certificate NID is not SHA256, expected %d found %d\n",
@@ -805,7 +804,6 @@ pkcs7_func_t crypto_pkcs7 = {
 x509_func_t crypto_x509 = {
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
                             .get_short_info = x509_get_short_info,
-                            .md_is_sha256 = x509_md_is_sha256,
                             .get_long_desc = x509_get_long_desc,
                             .pem_to_der = x509_convert_pem_to_der,
 #endif
