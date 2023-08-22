@@ -447,14 +447,15 @@ int crypto_x509_get_long_desc (char *x509_info, size_t max_len, const char *deli
   return actual_mem_len;
 }
 
-static int
-x509_convert_pem_to_der (const unsigned char *input, size_t ilen, unsigned char **output, size_t *olen)
+int crypto_convert_pem_to_der (const unsigned char *input, size_t ilen, unsigned char **output, size_t *olen)
 {
   int rc;
+  /* these variables are not needed on return, just needed to properly call the function */
   char *header = NULL, *name = NULL;
   BIO *bio;
 
   bio = BIO_new_mem_buf (input, ilen);
+  /* returns 1 on success so flip result*/
   rc = !PEM_read_bio (bio, &name, &header, output, (long int *) olen);
   if (header)
     OPENSSL_free (header);
@@ -800,7 +801,4 @@ pkcs7_func_t crypto_pkcs7 = {
                             };
 
 x509_func_t crypto_x509 = {
-#ifdef SECVAR_CRYPTO_WRITE_FUNC
-                            .pem_to_der = x509_convert_pem_to_der,
-#endif
                           };

@@ -82,17 +82,6 @@ generate_md_hash (const uint8_t *data, const size_t data_size, const int hash_ty
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 
 static int
-get_der_from_pem (const uint8_t *pem_cer, size_t pem_cert_len, uint8_t **der_cert, size_t *der_cert_len)
-{
-  int rc;
-
-  rc = crypto_x509.pem_to_der (pem_cer, pem_cert_len, der_cert, der_cert_len);
-  if (rc != SV_SUCCESS)
-    return rc;
-
-  return SV_SUCCESS;
-}
-static int
 generate_pkcs7_from_signed_data (uint8_t *data, size_t size, uint8_t **sign_certs,
                                  uint8_t **sign_keys, size_t sign_key_count,
                                  uint8_t **out_buffer, size_t *out_buffer_size)
@@ -145,7 +134,6 @@ crypto_func_t crypto = { .generate_md_hash = generate_md_hash,
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
                          .generate_pkcs7_signature = generate_pkcs7_signature,
                          .generate_pkcs7_from_signed_data = generate_pkcs7_from_signed_data,
-                         .get_der_from_pem = get_der_from_pem,
 #endif
                          .get_pkcs7_certificate = get_pkcs7_certificate,
                          .validate_x509_certificate = validate_x509_certificate,

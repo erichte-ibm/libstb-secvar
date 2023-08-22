@@ -172,7 +172,16 @@ int crypto_x509_get_long_desc (char *x509_info, size_t max_len, const char *deli
 void crypto_strerror (int rc, char *out_str, size_t out_max_len);
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
-typedef int (*convert_pem_to_der) (const unsigned char *, size_t, unsigned char **, size_t *);
+/*
+ * attempts to convert PEM data buffer into DER data buffer
+ * @param input , PEM data buffer
+ * @param ilen , length of input data
+ * @param output , pointer to output DER data, not yet allocated
+ * @param olen , pointer to length of output data
+ * @return CRYPTO_SUCCESS or errno if conversion failed
+ * Note: Remember to unallocate the output data!
+ */
+int crypto_convert_pem_to_der (const unsigned char *input, size_t ilen, unsigned char **output, size_t *olen);
 #endif
 
 /* MD HASH */
@@ -217,9 +226,6 @@ typedef struct md_func md_func_t;
 
 struct x509_func
 {
-#ifdef SECVAR_CRYPTO_WRITE_FUNC
-  convert_pem_to_der pem_to_der;
-#endif
 };
 
 typedef struct x509_func x509_func_t;
@@ -238,7 +244,6 @@ typedef int (*validate_x509_cert) (crypto_x509_t *);
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 typedef int (*generate_pkcs7_sig) (uint8_t *, size_t, uint8_t **, uint8_t **, size_t, uint8_t **, size_t *);
 typedef int (*generate_pkcs7) (uint8_t *, size_t, uint8_t **, uint8_t **, size_t, uint8_t **, size_t *);
-typedef int (*der_from_pem) (const uint8_t *, size_t, uint8_t **, size_t *);
 #endif
 
 struct crypto
@@ -246,7 +251,6 @@ struct crypto
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
   generate_pkcs7_sig generate_pkcs7_signature;
   generate_pkcs7 generate_pkcs7_from_signed_data;
-  der_from_pem get_der_from_pem;
 #endif
   generate_hash generate_md_hash;
   get_pkcs7_cert get_pkcs7_certificate;
