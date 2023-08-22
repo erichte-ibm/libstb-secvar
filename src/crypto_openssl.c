@@ -737,12 +737,6 @@ void crypto_md_free (crypto_md_ctx_t *ctx)
   EVP_MD_CTX_free (ctx);
 }
 
-static void
-md_hash_free (unsigned char *hash)
-{
-  OPENSSL_free (hash);
-}
-
 static int
 md_generate_hash (const unsigned char *data, size_t size, int hash_funct,
                   unsigned char **outHash, size_t *outHashSize)
@@ -796,7 +790,6 @@ out:
 }
 
 md_func_t crypto_md = {
-                        .hash_free = md_hash_free,
                         .generate_hash = md_generate_hash,
                          };
 

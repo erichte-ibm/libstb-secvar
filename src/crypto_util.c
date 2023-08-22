@@ -74,7 +74,7 @@ generate_md_hash (const uint8_t *data, const size_t data_size, const int hash_ty
     return rc;
 
   memcpy (*out_buffer, hash, *out_buffer_size);
-  crypto_md.hash_free (hash);
+  free (hash);
 
   return SV_SUCCESS;
 }

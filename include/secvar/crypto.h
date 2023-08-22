@@ -254,7 +254,6 @@ int crypto_convert_pem_to_der (const unsigned char *input, size_t ilen, unsigned
 #endif
 
 /* MD HASH */
-typedef void (*crypto_md_hash_free) (unsigned char *);
 typedef int (*crypto_md_generate_hash) (const unsigned char *, size_t, int, unsigned char **, size_t *);
 
 struct pkcs7_func
@@ -265,7 +264,6 @@ typedef struct pkcs7_func pkcs7_func_t;
 
 struct md_func
 {
-  crypto_md_hash_free hash_free;
   crypto_md_generate_hash generate_hash;
 };
 
