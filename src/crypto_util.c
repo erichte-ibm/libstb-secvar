@@ -62,23 +62,6 @@ get_pkcs7_certificate (const uint8_t *cert_data, size_t cert_data_len, crypto_pk
   return SV_SUCCESS;
 }
 
-#ifdef SECVAR_CRYPTO_WRITE_FUNC
-
-hash_func_t hash_functions[] = {
-  { .name = "SHA1", .size = 20, .crypto_md_funct = CRYPTO_MD_SHA1, .guid = &PKS_CERT_SHA1_GUID },
-  { .name = "SHA224", .size = 28, .crypto_md_funct = CRYPTO_MD_SHA224, .guid = &PKS_CERT_SHA224_GUID },
-  { .name = "SHA256", .size = 32, .crypto_md_funct = CRYPTO_MD_SHA256, .guid = &PKS_CERT_SHA256_GUID },
-  { .name = "SHA384", .size = 48, .crypto_md_funct = CRYPTO_MD_SHA384, .guid = &PKS_CERT_SHA384_GUID },
-  { .name = "SHA512", .size = 64, .crypto_md_funct = CRYPTO_MD_SHA512, .guid = &PKS_CERT_SHA512_GUID },
-};
-
-hash_func_t x509_hash_functions[] = {
-  { .name = "SHA256", .size = 32, .crypto_md_funct = CRYPTO_MD_SHA256, .guid = &PKS_CERT_X509_SHA256_GUID },
-  { .name = "SHA384", .size = 48, .crypto_md_funct = CRYPTO_MD_SHA384, .guid = &PKS_CERT_X509_SHA384_GUID },
-  { .name = "SHA512", .size = 64, .crypto_md_funct = CRYPTO_MD_SHA512, .guid = &PKS_CERT_X509_SHA512_GUID },
-};
-#endif
-
 crypto_func_t crypto = {
                          .get_pkcs7_certificate = get_pkcs7_certificate,
                          .validate_x509_certificate = validate_x509_certificate,

@@ -275,18 +275,6 @@ struct crypto
 };
 
 typedef struct crypto crypto_func_t;
-
-#ifdef SECVAR_CRYPTO_WRITE_FUNC
-struct hash_func
-{
-  char name[8];
-  size_t size;
-  int crypto_md_funct;
-  uuid_t const *guid;
-};
-
-typedef struct hash_func hash_func_t;
-#endif
 extern crypto_func_t crypto;
 
 #endif
