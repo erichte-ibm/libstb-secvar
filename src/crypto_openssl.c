@@ -720,21 +720,19 @@ int crypto_md_ctx_init (crypto_md_ctx_t **ctx, int md_id)
   return !EVP_DigestInit_ex ((EVP_MD_CTX *) *ctx, md, NULL);
 }
 
-static int
-md_update (crypto_md_ctx_t *ctx, const unsigned char *data, size_t data_len)
+int crypto_md_update (crypto_md_ctx_t *ctx, const unsigned char *data, size_t data_len)
 {
   /* returns 1 on success and 0 for fail */
   return !EVP_DigestUpdate (ctx, data, data_len);
 }
 
-static int
-md_finish (crypto_md_ctx_t *ctx, unsigned char *hash)
+int crypto_md_finish (crypto_md_ctx_t *ctx, unsigned char *hash)
 {
+  /* returns 1 on success and 0 on fail */
   return !EVP_DigestFinal_ex (ctx, hash, NULL);
 }
 
-static void
-md_free (crypto_md_ctx_t *ctx)
+void crypto_md_free (crypto_md_ctx_t *ctx)
 {
   EVP_MD_CTX_free (ctx);
 }
@@ -757,7 +755,7 @@ md_generate_hash (const unsigned char *data, size_t size, int hash_funct,
   if (rc)
     return rc;
 
-  rc = md_update (ctx, data, size);
+  rc = crypto_md_update (ctx, data, size);
   if (rc)
     goto out;
 
@@ -782,7 +780,7 @@ md_generate_hash (const unsigned char *data, size_t size, int hash_funct,
       goto out;
     }
 
-  rc = md_finish (ctx, *outHash);
+  rc = crypto_md_finish (ctx, *outHash);
   if (rc)
     {
       OPENSSL_free (*outHash);
@@ -793,14 +791,11 @@ md_generate_hash (const unsigned char *data, size_t size, int hash_funct,
   *outHashSize = hash_len;
 
 out:
-  md_free (ctx);
+  crypto_md_free (ctx);
   return rc;
 }
 
 md_func_t crypto_md = {
-                        .update = md_update,
-                        .finish = md_finish,
-                        .free = md_free,
                         .hash_free = md_hash_free,
                         .generate_hash = md_generate_hash,
                          };

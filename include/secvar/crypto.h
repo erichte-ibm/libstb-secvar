@@ -207,6 +207,29 @@ int crypto_x509_get_long_desc (char *x509_info, size_t max_len, const char *deli
  */
 int crypto_md_ctx_init (crypto_md_ctx_t **ctx, int md_id);
 
+/*
+ * can be repeatedly called to add data to be hashed by ctx
+ * @param ctx , a pointer to either a hashing context
+ * @param data , data to be hashed
+ * @param data_len , length of data to be hashed
+ * @return CRYPTO_SUCCESS or err if additional data could not be added to context
+ */
+int crypto_md_update (crypto_md_ctx_t *ctx, const unsigned char *data, size_t data_len);
+
+/*
+ * runs the hash over the supplied data (given with crypto_md_update) and returns it in hash
+ * @param  ctx , a pointer to a hashing context
+ * @param hash, an allocated data blob where the returned hash will be stored
+ * @return CRYPTO_SUCCESS or err if the hash generation was successful
+ */
+int crypto_md_finish (crypto_md_ctx_t *ctx, unsigned char *hash);
+
+/*
+ * frees the memory allocated for the hashing context
+ * @param ctx , a pointer to a hashing context
+ */
+void crypto_md_free (crypto_md_ctx_t *ctx);
+
 /**====================General Functions ====================**/
 
 /*
@@ -231,9 +254,6 @@ int crypto_convert_pem_to_der (const unsigned char *input, size_t ilen, unsigned
 #endif
 
 /* MD HASH */
-typedef int (*crypto_md_update) (crypto_md_ctx_t *, const unsigned char *, size_t);
-typedef int (*crypto_md_finish) (crypto_md_ctx_t *, unsigned char *);
-typedef void (*crypto_md_free) (crypto_md_ctx_t *);
 typedef void (*crypto_md_hash_free) (unsigned char *);
 typedef int (*crypto_md_generate_hash) (const unsigned char *, size_t, int, unsigned char **, size_t *);
 
@@ -245,9 +265,6 @@ typedef struct pkcs7_func pkcs7_func_t;
 
 struct md_func
 {
-  crypto_md_update update;
-  crypto_md_finish finish;
-  crypto_md_free free;
   crypto_md_hash_free hash_free;
   crypto_md_generate_hash generate_hash;
 };
