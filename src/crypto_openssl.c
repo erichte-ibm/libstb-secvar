@@ -468,10 +468,9 @@ int crypto_convert_pem_to_der (const unsigned char *input, size_t ilen, unsigned
   return rc;
 }
 
-static int
-pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
+int crypto_pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
                             const unsigned char *new_data, size_t new_data_size,
-                            const char **crt_files, const char **keyFiles,
+                            const char **crt_files, const char **key_files,
                             int key_pairs, int hash_funct)
 {
   int rc;
@@ -482,28 +481,30 @@ pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
   const EVP_MD *evp_md = NULL;
   crypto_x509_t *x509 = NULL;
   long pkcs7_out_len;
-  unsigned char *key = NULL, *keyTmp, *crt = NULL, *out_bio_der = NULL;
+  unsigned char *key = NULL, *key_tmp, *crt = NULL, *out_bio_der = NULL;
   char *unnecessary_hdr = NULL, *unnecessary_name = NULL;
-  long int keySize, crtSize;
+  long int key_size, crt_size;
 
   if (key_pairs == 0)
     {
       prlog (PR_ERR, "ERROR: No signers given, cannot generate PKCS7\n");
-      return SV_CRYPTO_USAGE_BUG;
+      return ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_PKCS7_ADD_SIGNER_ERROR);
     }
 
   evp_md = EVP_get_digestbynid (hash_funct);
   if (!evp_md)
     {
       prlog (PR_ERR, "ERROR: Unknown NID (%d) for MD found in PKCS7\n", hash_funct);
-      return SV_CRYPTO_USAGE_BUG;
+      rc = ERR_get_error();
+      return !rc ? ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_PKCS7_ADD_SIGNER_ERROR) : rc;
     }
 
   bio = BIO_new_mem_buf (new_data, new_data_size);
   if (!bio)
     {
       prlog (PR_ERR, "ERROR: Failed to initialize new data BIO structure\n");
-      rc = SV_UNEXPECTED_CRYPTO_ERROR;
+      rc = ERR_get_error();
+      rc = !rc ? ERR_R_MALLOC_FAILURE : rc;
       goto out;
     }
 
@@ -511,42 +512,45 @@ pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
   if (!gen_pkcs7_struct)
     {
       prlog (PR_ERR, "ERROR: Failed to initialize pkcs7 structure\n");
-      rc = SV_UNEXPECTED_CRYPTO_ERROR;
+      rc = ERR_get_error();
+      rc = !rc ? ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_PKCS7_ADD_SIGNER_ERROR) : rc;
       goto out;
     }
   /* for every key pair get the data and add the signer to the pkcs7 */
   for (int i = 0; i < key_pairs; i++)
     {
       /* get data of private keys */
-      fp = fopen (keyFiles[i], "r");
+      fp = fopen (key_files[i], "r");
       if (fp == NULL)
         {
-          prlog (PR_ERR, "ERROR: failed to open file %s: %s\n", keyFiles[i],
+          prlog (PR_ERR, "ERROR: failed to open file %s: %s\n", key_files[i],
                  strerror (errno));
-          rc = SV_INVALID_FILE;
+          rc = ERR_PACK(ERR_LIB_PKCS7, 0 ,PKCS7_R_NO_CONTENT);
           goto out;
         }
-      rc = PEM_read (fp, &unnecessary_name, &unnecessary_hdr, &key, &keySize);
+      rc = PEM_read (fp, &unnecessary_name, &unnecessary_hdr, &key, &key_size);
       OPENSSL_free (unnecessary_name);
       OPENSSL_free (unnecessary_hdr);
       fclose (fp);
       /* returns 1 on success */
       if (rc != 1)
         {
-          prlog (PR_ERR, "ERROR: failed to get data from priv key file %s\n", keyFiles[i]);
-          rc = SV_INVALID_FILE;
+          prlog (PR_ERR, "ERROR: failed to get data from priv key file %s\n", key_files[i]);
+          rc = ERR_get_error();
+          rc = !rc ? ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_PKCS7_ADD_SIGNER_ERROR) : rc;
           goto out;
         }
       /* get data from crt */
       fp = fopen (crt_files[i], "r");
       if (fp == NULL)
         {
-          prlog (PR_ERR, "ERROR: failed to open file %s: %s\n", keyFiles[i],
+          prlog (PR_ERR, "ERROR: failed to open file %s: %s\n", crt_files[i],
                  strerror (errno));
-          rc = SV_INVALID_FILE;
+          rc = ERR_get_error();
+          rc = !rc ? ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_PKCS7_ADD_SIGNER_ERROR) : rc;
           goto out;
         }
-      rc = PEM_read (fp, &unnecessary_name, &unnecessary_hdr, &crt, &crtSize);
+      rc = PEM_read (fp, &unnecessary_name, &unnecessary_hdr, &crt, &crt_size);
       OPENSSL_free (unnecessary_name);
       OPENSSL_free (unnecessary_hdr);
       fclose (fp);
@@ -554,26 +558,29 @@ pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
       if (rc != 1)
         {
           prlog (PR_ERR, "ERROR: failed to get data from cert file %s\n", crt_files[i]);
-          rc = SV_INVALID_FILE;
+          rc = ERR_get_error();
+          rc = !rc ? ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_PKCS7_ADD_SIGNER_ERROR) : rc;
           goto out;
         }
       /* get private key from private key DER buff */
-      keyTmp = key;
-      evp_pkey = d2i_AutoPrivateKey (NULL, (const unsigned char **) &keyTmp, keySize);
+      key_tmp = key;
+      evp_pkey = d2i_AutoPrivateKey (NULL, (const unsigned char **) &key_tmp, key_size);
       if (!evp_pkey)
         {
           prlog (PR_ERR, "ERROR: Failed to parse private key into EVP_PKEY "
                          "openssl struct\n");
-          rc = SV_INVALID_FILE;
+          rc = ERR_get_error();
+          rc = !rc ? ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_PKCS7_ADD_SIGNER_ERROR) : rc;
           goto out;
         }
       /* get x509 from cert DER buff */
-      x509 = crypto_x509_parse_der (crt, crtSize);
+      x509 = crypto_x509_parse_der (crt, crt_size);
       if (!x509)
         {
           prlog (PR_ERR, "ERROR: Failed to parse certificate into x509 openssl "
                          "struct\n");
-          rc = SV_INVALID_FILE;
+          rc = ERR_get_error();
+          rc = !rc ? ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_PKCS7_ADD_SIGNER_ERROR) : rc;
           goto out;
         }
       /*
@@ -584,7 +591,8 @@ pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
         {
           prlog (PR_ERR,
                  "ERROR: Failed to add signer to the pkcs7 structure\n");
-          rc = SV_UNEXPECTED_CRYPTO_ERROR;
+          rc = ERR_get_error();
+          rc = !rc ? ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_PKCS7_ADD_SIGNER_ERROR) : rc;
           goto out;
         }
       /* reset mem */
@@ -603,7 +611,8 @@ pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
   if (rc != 1)
     {
       prlog (PR_ERR, "ERROR: Failed to finalize openssl pkcs7 struct\n");
-      rc = SV_UNEXPECTED_CRYPTO_ERROR;
+      rc = ERR_get_error();
+      rc = !rc ? ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_PKCS7_ADD_SIGNER_ERROR) : rc;
       goto out;
     }
 
@@ -612,7 +621,8 @@ pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
   if (!out_bio)
     {
       prlog (PR_ERR, "ERROR: Failed to initialize openssl BIO \n");
-      rc = SV_ALLOCATION_FAILED;
+      rc = ERR_get_error();
+      rc = !rc ? ERR_R_MALLOC_FAILURE : rc;
       goto out;
     }
 
@@ -621,7 +631,8 @@ pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
   if (!rc)
     {
       prlog (PR_ERR, "ERROR: Failed to convert PKCS7 Struct to DER\n");
-      rc = SV_UNEXPECTED_CRYPTO_ERROR;
+      rc = ERR_get_error();
+      rc = !rc ? ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_PKCS7_ADD_SIGNER_ERROR) : rc;
       goto out;
     }
 
@@ -640,7 +651,8 @@ pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
   if (!*pkcs7)
     {
       prlog (PR_ERR, "ERROR: Failed to allocate memory\n");
-      rc = SV_ALLOCATION_FAILED;
+      rc = ERR_get_error();
+      rc = !rc ? ERR_R_MALLOC_FAILURE : rc;
       goto out;
     }
 
@@ -648,7 +660,7 @@ pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size,
   /* copy memory over so it is persistent */
   memcpy (*pkcs7, out_bio_der, *pkcs7_size);
   /* if here then successfull generation */
-  rc = SV_SUCCESS;
+  rc = OPENSSL_SUCCESS;
 
 out:
   if (key)
@@ -794,7 +806,6 @@ md_func_t crypto_md = { .init = md_ctx_init,
 
 pkcs7_func_t crypto_pkcs7 = {
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
-                              .generate_w_signature = pkcs7_generate_w_signature,
                               .generate_w_already_signed_data =
                                       pkcs7_generate_w_already_signed_data,
 #endif
