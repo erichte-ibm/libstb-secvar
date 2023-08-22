@@ -684,8 +684,7 @@ out:
   return rc;
 }
 
-static int
-pkcs7_generate_w_already_signed_data (unsigned char **pkcs7, size_t *pkcs7_size,
+int crypto_pkcs7_generate_w_already_signed_data (unsigned char **pkcs7, size_t *pkcs7_size,
                                       const unsigned char *new_data, size_t new_data_size,
                                       const char **crt_files, const char **sig_files,
                                       int key_pairs, int hash_funct)
@@ -693,7 +692,7 @@ pkcs7_generate_w_already_signed_data (unsigned char **pkcs7, size_t *pkcs7_size,
   prlog (PR_ERR,
          "ERROR: Currently unable to support generation of PKCS7 with "
          "externally generated signatures when compiling with OpenSSL\n");
-  return SV_CRYPTO_USAGE_BUG;
+  return ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_UNKNOWN_OPERATION);
 }
 #endif
 
@@ -805,10 +804,7 @@ md_func_t crypto_md = { .init = md_ctx_init,
                          };
 
 pkcs7_func_t crypto_pkcs7 = {
-#ifdef SECVAR_CRYPTO_WRITE_FUNC
-                              .generate_w_already_signed_data =
-                                      pkcs7_generate_w_already_signed_data,
-#endif
+
                             };
 
 x509_func_t crypto_x509 = {

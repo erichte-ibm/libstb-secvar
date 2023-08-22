@@ -81,23 +81,6 @@ generate_md_hash (const uint8_t *data, const size_t data_size, const int hash_ty
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 
-static int
-generate_pkcs7_from_signed_data (uint8_t *data, size_t size, uint8_t **sign_certs,
-                                 uint8_t **sign_keys, size_t sign_key_count,
-                                 uint8_t **out_buffer, size_t *out_buffer_size)
-{
-  int rc;
-
-  rc = crypto_pkcs7.generate_w_already_signed_data (out_buffer, out_buffer_size, data,
-                                                    size, (const char **) sign_certs,
-                                                    (const char **) sign_keys,
-                                                    sign_key_count, CRYPTO_MD_SHA256);
-  if (rc != SV_SUCCESS)
-    return rc;
-
-  return SV_SUCCESS;
-}
-
 hash_func_t hash_functions[] = {
   { .name = "SHA1", .size = 20, .crypto_md_funct = CRYPTO_MD_SHA1, .guid = &PKS_CERT_SHA1_GUID },
   { .name = "SHA224", .size = 28, .crypto_md_funct = CRYPTO_MD_SHA224, .guid = &PKS_CERT_SHA224_GUID },
@@ -114,9 +97,6 @@ hash_func_t x509_hash_functions[] = {
 #endif
 
 crypto_func_t crypto = { .generate_md_hash = generate_md_hash,
-#ifdef SECVAR_CRYPTO_WRITE_FUNC
-                         .generate_pkcs7_from_signed_data = generate_pkcs7_from_signed_data,
-#endif
                          .get_pkcs7_certificate = get_pkcs7_certificate,
                          .validate_x509_certificate = validate_x509_certificate,
                          };
