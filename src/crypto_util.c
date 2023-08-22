@@ -62,23 +62,6 @@ get_pkcs7_certificate (const uint8_t *cert_data, size_t cert_data_len, crypto_pk
   return SV_SUCCESS;
 }
 
-static int
-generate_md_hash (const uint8_t *data, const size_t data_size, const int hash_type,
-                  uint8_t **out_buffer, size_t *out_buffer_size)
-{
-  int rc;
-  uint8_t *hash = NULL;
-
-  rc = crypto_md.generate_hash (data, data_size, hash_type, &hash, out_buffer_size);
-  if (rc != SV_SUCCESS)
-    return rc;
-
-  memcpy (*out_buffer, hash, *out_buffer_size);
-  free (hash);
-
-  return SV_SUCCESS;
-}
-
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 
 hash_func_t hash_functions[] = {
@@ -96,7 +79,7 @@ hash_func_t x509_hash_functions[] = {
 };
 #endif
 
-crypto_func_t crypto = { .generate_md_hash = generate_md_hash,
+crypto_func_t crypto = {
                          .get_pkcs7_certificate = get_pkcs7_certificate,
                          .validate_x509_certificate = validate_x509_certificate,
                          };

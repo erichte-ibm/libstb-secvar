@@ -155,7 +155,7 @@ verify_signature (const auth_data_t *auth_data, const timestamp_t *timestamp,
                   sv_flag_t *verified_flag)
 {
   sv_err_t rc = SV_SUCCESS;
-  uint8_t hash[MAX_HASH_SIZE] = { 0 };
+  uint8_t *hash = NULL;
   crypto_pkcs7_t *pkcs7 = NULL;
 
   /* convert cert into PKCS#7 structure */
@@ -176,7 +176,7 @@ verify_signature (const auth_data_t *auth_data, const timestamp_t *timestamp,
   else
     {
       /* generate hash */
-      rc = construct_auth2_hash (auth_data, timestamp, esl_data, esl_data_size, hash);
+      rc = construct_auth2_hash (auth_data, timestamp, esl_data, esl_data_size, &hash);
       if (rc != SV_SUCCESS)
         prlog (PR_ERR, "Error constructing auth2 hash.\n");
       else
@@ -194,6 +194,7 @@ verify_signature (const auth_data_t *auth_data, const timestamp_t *timestamp,
     }
 
   crypto_pkcs7_free (pkcs7);
+  free (hash);
 
   return rc;
 }

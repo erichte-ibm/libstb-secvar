@@ -230,6 +230,19 @@ int crypto_md_finish (crypto_md_ctx_t *ctx, unsigned char *hash);
  */
 void crypto_md_free (crypto_md_ctx_t *ctx);
 
+/*
+ * given a data buffer, generate the desired hash
+ * @param data, data to be hashed
+ * @param size , length of buff
+ * @param hash_funct, crypto_md_funct, message digest type
+ * @param out_hash , the resulting hash, currently unalloc'd NOTE: REMEMBER TO UNALLOC THIS MEMORY
+ * @param out_hash_size, should be alg->size
+ * @return CRYPTO_SUCCESS or err number
+ * NOTE: out_hash is allocated inside this function and must be unallocated sometime after calling
+ */
+int crypto_md_generate_hash (const unsigned char *data, size_t size, int hash_funct,
+                  unsigned char **out_hash, size_t *out_hash_size);
+
 /**====================General Functions ====================**/
 
 /*
@@ -253,9 +266,6 @@ void crypto_strerror (int rc, char *out_str, size_t out_max_len);
 int crypto_convert_pem_to_der (const unsigned char *input, size_t ilen, unsigned char **output, size_t *olen);
 #endif
 
-/* MD HASH */
-typedef int (*crypto_md_generate_hash) (const unsigned char *, size_t, int, unsigned char **, size_t *);
-
 struct pkcs7_func
 {
 };
@@ -264,7 +274,6 @@ typedef struct pkcs7_func pkcs7_func_t;
 
 struct md_func
 {
-  crypto_md_generate_hash generate_hash;
 };
 
 typedef struct md_func md_func_t;
@@ -282,13 +291,11 @@ extern pkcs7_func_t crypto_pkcs7;
 /* X509 */
 extern x509_func_t crypto_x509;
 
-typedef int (*generate_hash) (const uint8_t *, const size_t, const int, uint8_t **, size_t *);
 typedef int (*get_pkcs7_cert) (const uint8_t *, size_t, crypto_pkcs7_t **);
 typedef int (*validate_x509_cert) (crypto_x509_t *);
 
 struct crypto
 {
-  generate_hash generate_md_hash;
   get_pkcs7_cert get_pkcs7_certificate;
   validate_x509_cert validate_x509_certificate;
 };

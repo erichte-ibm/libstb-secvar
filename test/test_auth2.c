@@ -22,7 +22,7 @@ main (int argc, char **argv)
   size_t cert_size, data_size;
   sv_err_t rc;
   timestamp_t timestamp;
-  uint8_t hash[MAX_HASH_SIZE] = { 0 };
+  uint8_t *hash = NULL;
 
   printf ("testing authenticated variables unpack...");
 
@@ -79,7 +79,7 @@ main (int argc, char **argv)
   auth_data.vendor = (uuid_t *) &SV_IMAGE_SECURITY_DATABASE_GUID;
   auth_data.attributes = SECVAR_ATTRIBUTES;
 
-  rc = construct_auth2_hash (&auth_data, &timestamp, data, data_size, hash);
+  rc = construct_auth2_hash (&auth_data, &timestamp, data, data_size, &hash);
   /* 
    * 6b:bb:47:0b:52:59:f6:9e:02:07:94:39:93:ea:4b:25:8b:51:0e:df:c5:1f:
    * a5:bd:ba:df:9f:ba:92:4e:4b:82
@@ -90,6 +90,7 @@ main (int argc, char **argv)
   assert (hash[30] == 0x4b);
   assert (hash[31] == 0x82);
 
+  free (hash);
   printf("PASS\n");
 
   return 0;

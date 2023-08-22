@@ -737,9 +737,8 @@ void crypto_md_free (crypto_md_ctx_t *ctx)
   EVP_MD_CTX_free (ctx);
 }
 
-static int
-md_generate_hash (const unsigned char *data, size_t size, int hash_funct,
-                  unsigned char **outHash, size_t *outHashSize)
+int crypto_md_generate_hash (const unsigned char *data, size_t size, int hash_funct,
+                  unsigned char **out_hash, size_t *out_hash_size)
 {
   int rc;
   crypto_md_ctx_t *ctx = NULL;
@@ -762,27 +761,27 @@ md_generate_hash (const unsigned char *data, size_t size, int hash_funct,
       case CRYPTO_MD_SHA512: hash_len = SHA512_DIGEST_LENGTH; break;
       default:
         prlog (PR_ERR, "ERROR: Unknown NID (%d)\n", hash_funct);
-        rc = SV_CRYPTO_USAGE_BUG;
+        rc = ERR_PACK(ERR_LIB_EVP, 0, EVP_R_INVALID_DIGEST);
         goto out;
     }
 
-  *outHash = OPENSSL_malloc (hash_len);
-  if (!*outHash)
+  *out_hash = OPENSSL_malloc (hash_len);
+  if (!*out_hash)
     {
       prlog (PR_ERR, "ERROR: Failed to allocate data\n");
-      rc = SV_ALLOCATION_FAILED;
+      rc = ERR_R_MALLOC_FAILURE;
       goto out;
     }
 
-  rc = crypto_md_finish (ctx, *outHash);
+  rc = crypto_md_finish (ctx, *out_hash);
   if (rc)
     {
-      OPENSSL_free (*outHash);
-      *outHash = NULL;
+      OPENSSL_free (*out_hash);
+      *out_hash = NULL;
       goto out;
     }
 
-  *outHashSize = hash_len;
+  *out_hash_size = hash_len;
 
 out:
   crypto_md_free (ctx);
@@ -790,7 +789,6 @@ out:
 }
 
 md_func_t crypto_md = {
-                        .generate_hash = md_generate_hash,
                          };
 
 pkcs7_func_t crypto_pkcs7 = {

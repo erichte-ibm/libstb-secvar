@@ -39,7 +39,7 @@ unpack_authenticated_variable (const auth_data_t *auth_data, timestamp_t *timest
  * @data: data portion of the message or NULL if there is no data
  * @data_size: size of the data if present.
  *
- * @hash: out: buffer containing the hash. Must have storage for a SHA-256 hash. (32 bytes)
+ * @hash: out: buffer containing the hash. Allocated inside function
  *
  * Returns: 0 on success, otherwise an error from the crypto library
  * (e.g. out of memory)
@@ -52,5 +52,5 @@ unpack_authenticated_variable (const auth_data_t *auth_data, timestamp_t *timest
  */
 sv_err_t
 construct_auth2_hash (const auth_data_t *auth_data, const timestamp_t *timestamp,
-                      const uint8_t *data, const size_t data_size, uint8_t *hash);
+                      const uint8_t *data, const size_t data_size, uint8_t **hash);
 #endif

@@ -118,7 +118,7 @@ unpack_authenticated_variable (const auth_data_t *auth_data, timestamp_t *timest
  * @data: data portion of the message or NULL if there is no data
  * @data_size: size of the data if present.
  *
- * @hash: out: buffer containing the hash. Must have storage for a SHA-256 hash. (32 bytes)
+ * @hash: out: buffer containing the hash. To be allocated
  *
  * Returns: 0 on success, otherwise an error from the crypto library
  * (e.g. out of memory)
@@ -131,7 +131,7 @@ unpack_authenticated_variable (const auth_data_t *auth_data, timestamp_t *timest
  */
 sv_err_t
 construct_auth2_hash (const auth_data_t *auth_data, const timestamp_t *timestamp,
-                      const uint8_t *data, const size_t data_size, uint8_t *hash)
+                      const uint8_t *data, const size_t data_size, uint8_t **hash)
 {
   sv_err_t rc = SV_SUCCESS;
   size_t name_len = 0, hash_len = 0, len = 0;
@@ -165,7 +165,7 @@ construct_auth2_hash (const auth_data_t *auth_data, const timestamp_t *timestamp
       len += data_size;
     }
 
-  rc = crypto.generate_md_hash (auth_msg, len, CRYPTO_MD_SHA256, &hash, &hash_len);
+  rc = crypto_md_generate_hash (auth_msg, len, CRYPTO_MD_SHA256, hash, &hash_len);
   if (rc != SV_SUCCESS)
     {
       prlog (PR_ERR, "auth2 hash generation failed\n");
