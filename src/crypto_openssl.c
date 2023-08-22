@@ -17,7 +17,6 @@
 #include <openssl/err.h>
 #include <openssl/crypto.h>
 #include "secvar/crypto.h"
-#include "libstb-secvar-errors.h"
 
 /* X509 */
 

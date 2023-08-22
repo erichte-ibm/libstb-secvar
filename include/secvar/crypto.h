@@ -6,7 +6,6 @@
 #define LIBSTB_SECVAR_CRYPTO_H
 
 #include <stdbool.h>
-#include <external/edk2/common.h>
 
 #ifdef SECVAR_CRYPTO_OPENSSL
 #include <openssl/obj_mac.h>
