@@ -265,31 +265,6 @@ void crypto_strerror (int rc, char *out_str, size_t out_max_len);
 int crypto_convert_pem_to_der (const unsigned char *input, size_t ilen, unsigned char **output, size_t *olen);
 #endif
 
-struct pkcs7_func
-{
-};
-
-typedef struct pkcs7_func pkcs7_func_t;
-
-struct md_func
-{
-};
-
-typedef struct md_func md_func_t;
-
-struct x509_func
-{
-};
-
-typedef struct x509_func x509_func_t;
-
-/* MD HASH */
-extern md_func_t crypto_md;
-/* PKCS7 */
-extern pkcs7_func_t crypto_pkcs7;
-/* X509 */
-extern x509_func_t crypto_x509;
-
 typedef int (*get_pkcs7_cert) (const uint8_t *, size_t, crypto_pkcs7_t **);
 typedef int (*validate_x509_cert) (crypto_x509_t *);
 
@@ -311,9 +286,6 @@ struct hash_func
 };
 
 typedef struct hash_func hash_func_t;
-
-extern hash_func_t hash_functions[5];
-extern hash_func_t x509_hash_functions[3];
 #endif
 extern crypto_func_t crypto;
 

@@ -787,12 +787,3 @@ out:
   return rc;
 }
 
-md_func_t crypto_md = {
-                         };
-
-pkcs7_func_t crypto_pkcs7 = {
-
-                            };
-
-x509_func_t crypto_x509 = {
-                          };
