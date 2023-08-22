@@ -696,23 +696,25 @@ int crypto_pkcs7_generate_w_already_signed_data (unsigned char **pkcs7, size_t *
 }
 #endif
 
-static int
-md_ctx_init (crypto_md_ctx_t **ctx, int md_id)
+int crypto_md_ctx_init (crypto_md_ctx_t **ctx, int md_id)
 {
+  int rc;
   const EVP_MD *md;
 
   md = EVP_get_digestbynid (md_id);
   if (!md)
     {
       prlog (PR_ERR, "ERROR: Invalid MD NID\n");
-      return SV_CRYPTO_USAGE_BUG;
+      rc = ERR_get_error();
+      return !rc ? ERR_PACK(ERR_LIB_EVP, 0, EVP_R_INVALID_DIGEST) : rc;
     }
 
   *ctx = EVP_MD_CTX_new ();
   if (!*ctx)
     {
       prlog (PR_ERR, "ERROR: failed to allocate memory\n");
-      return SV_ALLOCATION_FAILED;
+      rc = ERR_get_error();
+      return !rc ? ERR_R_MALLOC_FAILURE : rc;
     }
 
   return !EVP_DigestInit_ex ((EVP_MD_CTX *) *ctx, md, NULL);
@@ -751,7 +753,7 @@ md_generate_hash (const unsigned char *data, size_t size, int hash_funct,
   crypto_md_ctx_t *ctx = NULL;
   size_t hash_len = 0;
 
-  rc = md_ctx_init (&ctx, hash_funct);
+  rc = crypto_md_ctx_init (&ctx, hash_funct);
   if (rc)
     return rc;
 
@@ -795,7 +797,7 @@ out:
   return rc;
 }
 
-md_func_t crypto_md = { .init = md_ctx_init,
+md_func_t crypto_md = {
                         .update = md_update,
                         .finish = md_finish,
                         .free = md_free,

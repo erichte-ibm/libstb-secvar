@@ -197,6 +197,16 @@ void crypto_x509_get_short_info (crypto_x509_t *x509, char *short_desc, size_t m
 int crypto_x509_get_long_desc (char *x509_info, size_t max_len, const char *delim, crypto_x509_t *x509);
 #endif
 
+/**====================Hashing Functions ====================**/
+
+/*
+ * Initializes and returns hashing context for the hashing function identified
+ * @param ctx , the returned hashing context
+ * @param md_id , the id of the hahsing function see above for possible values (CRYPTO_MD_xxx )
+ * @return CRYPTO_SUCCESS or err if the digest context setup failed
+ */
+int crypto_md_ctx_init (crypto_md_ctx_t **ctx, int md_id);
+
 /**====================General Functions ====================**/
 
 /*
@@ -221,7 +231,6 @@ int crypto_convert_pem_to_der (const unsigned char *input, size_t ilen, unsigned
 #endif
 
 /* MD HASH */
-typedef int (*crypto_md_ctx_init) (crypto_md_ctx_t **, int);
 typedef int (*crypto_md_update) (crypto_md_ctx_t *, const unsigned char *, size_t);
 typedef int (*crypto_md_finish) (crypto_md_ctx_t *, unsigned char *);
 typedef void (*crypto_md_free) (crypto_md_ctx_t *);
@@ -236,7 +245,6 @@ typedef struct pkcs7_func pkcs7_func_t;
 
 struct md_func
 {
-  crypto_md_ctx_init init;
   crypto_md_update update;
   crypto_md_finish finish;
   crypto_md_free free;
