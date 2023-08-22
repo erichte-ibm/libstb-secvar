@@ -141,6 +141,24 @@ crypto_x509_t *crypto_x509_parse_der (const unsigned char *data, size_t data_len
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 /* return CRYPTO_SUCCESS if md of cert is sha256 */
 int crypto_x509_md_is_sha256 (crypto_x509_t *x509);
+
+/*
+ * returns a short string describing the x509 message digest and encryption algorithms
+ * @param x509, a pointer to an x509 struct
+ * @param short_desc ,  already alloc'd pointer to output string
+ * @param max_len   , number of bytes allocated to short_desc arg
+ */
+void crypto_x509_get_short_info (crypto_x509_t *x509, char *short_desc, size_t max_len);
+
+/*
+ * parses the x509 struct into a human readable informational string
+ * @param x509_info , already alloc-d pointer to output string
+ * @param max_len , number of bytes allocated to x509_info
+ * @param delim  , eachline will start with this, usually indent, when using openssl, the length of this value is the number of 8 spaced tabs
+ * @param x509 ,  a pointer to  an x509 struct
+ * @return number of bytes written to x509_info
+ */
+int crypto_x509_get_long_desc (char *x509_info, size_t max_len, const char *delim, crypto_x509_t *x509);
 #endif
 
 /**====================General Functions ====================**/
@@ -154,9 +172,7 @@ int crypto_x509_md_is_sha256 (crypto_x509_t *x509);
 void crypto_strerror (int rc, char *out_str, size_t out_max_len);
 
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
-typedef void (*crypto_x509_short_info) (crypto_x509_t *, char *, size_t);
 typedef int (*convert_pem_to_der) (const unsigned char *, size_t, unsigned char **, size_t *);
-typedef int (*crypto_x509_cert_long_desc) (char *, size_t, const char *, crypto_x509_t *);
 #endif
 
 /* MD HASH */
@@ -202,8 +218,6 @@ typedef struct md_func md_func_t;
 struct x509_func
 {
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
-  crypto_x509_short_info get_short_info;
-  crypto_x509_cert_long_desc get_long_desc;
   convert_pem_to_der pem_to_der;
 #endif
 };
@@ -224,7 +238,6 @@ typedef int (*validate_x509_cert) (crypto_x509_t *);
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
 typedef int (*generate_pkcs7_sig) (uint8_t *, size_t, uint8_t **, uint8_t **, size_t, uint8_t **, size_t *);
 typedef int (*generate_pkcs7) (uint8_t *, size_t, uint8_t **, uint8_t **, size_t, uint8_t **, size_t *);
-typedef int (*read_x509_cert) (const char *, crypto_x509_t *, size_t, char **);
 typedef int (*der_from_pem) (const uint8_t *, size_t, uint8_t **, size_t *);
 #endif
 
@@ -233,7 +246,6 @@ struct crypto
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
   generate_pkcs7_sig generate_pkcs7_signature;
   generate_pkcs7 generate_pkcs7_from_signed_data;
-  read_x509_cert read_x509_certificate_info;
   der_from_pem get_der_from_pem;
 #endif
   generate_hash generate_md_hash;

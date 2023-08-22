@@ -411,8 +411,7 @@ int crypto_x509_md_is_sha256 (crypto_x509_t *x509)
     }
 }
 
-static void
-x509_get_short_info (crypto_x509_t *x509, char *short_desc, size_t max_len)
+void crypto_x509_get_short_info (crypto_x509_t *x509, char *short_desc, size_t max_len)
 {
   const X509_ALGOR *alg = NULL;
   alg = X509_get0_tbs_sigalg (x509);
@@ -426,8 +425,7 @@ x509_get_short_info (crypto_x509_t *x509, char *short_desc, size_t max_len)
   OBJ_obj2txt (short_desc, max_len, alg->algorithm, 0);
 }
 
-static int
-x509_get_long_desc (char *x509_info, size_t max_len, const char *delim, crypto_x509_t *x509)
+int crypto_x509_get_long_desc (char *x509_info, size_t max_len, const char *delim, crypto_x509_t *x509)
 {
   int rc;
   long actual_mem_len;
@@ -803,8 +801,6 @@ pkcs7_func_t crypto_pkcs7 = {
 
 x509_func_t crypto_x509 = {
 #ifdef SECVAR_CRYPTO_WRITE_FUNC
-                            .get_short_info = x509_get_short_info,
-                            .get_long_desc = x509_get_long_desc,
                             .pem_to_der = x509_convert_pem_to_der,
 #endif
                           };
