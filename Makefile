@@ -55,6 +55,12 @@ SRCS = esl.c \
 
 #By default, build with openssl as crypto library
 CRYPTO_LIB = openssl
+CRYPTO_LIB_OPTIONS = openssl
+
+ifeq ($(filter $(CRYPTO_LIB),$(CRYPTO_LIB_OPTIONS)),)
+  $(error CRYPTO_LIB must be set to one of: $(CRYPTO_LIB_OPTIONS))
+endif
+
 ifeq ($(CRYPTO_LIB), openssl)
   SRCS += crypto_openssl.c
   CRYPTO_ARG = OPENSSL=1
