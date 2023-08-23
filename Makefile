@@ -126,9 +126,12 @@ endif
 TEST_SRCS = $(wildcard test/*.c)
 # variableScope: avoid reducing variable scope to maintain C compatibility
 # missingInclude: TODO: ideally rework all includes to make this unnecessary
+# unusedFunction: not all functions provided in the library might be used
+#  TODO: should be removed when test coverage improves
 CPPCHECK_ARGS = --enable=all --force            \
                 --suppress=variableScope        \
                 --suppress=missingInclude       \
+                --suppress=unusedFunction       \
                 --error-exitcode=1 -q
 cppcheck:
 	cppcheck $(CPPCHECK_ARGS)                    \
