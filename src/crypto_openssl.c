@@ -261,7 +261,7 @@ crypto_x509_t *crypto_pkcs7_get_signing_cert (crypto_pkcs7_t *pkcs7, int cert_nu
 int crypto_pkcs7_signed_hash_verify (crypto_pkcs7_t *pkcs7, crypto_x509_t *x509,
                                      unsigned char *hash, int hash_len)
 {
-  int rc, exp_size, md_nid, num_signers;
+  int exp_size, md_nid, num_signers, rc = ERR_R_INTERNAL_ERROR;
   unsigned char *exp_sig;
   EVP_PKEY *pk;
   EVP_PKEY_CTX *pk_ctx;
@@ -313,7 +313,7 @@ int crypto_pkcs7_signed_hash_verify (crypto_pkcs7_t *pkcs7, crypto_x509_t *x509,
   if (EVP_PKEY_CTX_set_signature_md (pk_ctx, evp_md) <= 0)
     {
       prlog (PR_ERR, "ERROR: Failed to set signature md for pk ctx\n");
-      rc = ERR_get_error();;
+      rc = ERR_get_error();
       goto out;
     }
 
@@ -601,7 +601,7 @@ int crypto_pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size
       evp_pkey = NULL;
       OPENSSL_free (crt);
       crt = NULL;
-      x509_free (x509);
+      X509_free (x509);
       x509 = NULL;
     }
 
@@ -642,7 +642,8 @@ int crypto_pkcs7_generate_w_signature (unsigned char **pkcs7, size_t *pkcs7_size
     {
       prlog (PR_ERR,
              "ERROR: Failed to extract PKCS7 DER data from openssl BIO\n");
-      rc = SV_UNEXPECTED_CRYPTO_ERROR;
+      rc = ERR_get_error();
+      rc = !rc ? ERR_PACK(ERR_LIB_PKCS7, 0, PKCS7_R_PKCS7_ADD_SIGNER_ERROR) : rc;
       goto out;
     }
 
@@ -672,7 +673,7 @@ out:
     EVP_PKEY_free (evp_pkey);
 
   if (x509)
-    x509_free (x509);
+    X509_free (x509);
 
   if (gen_pkcs7_struct)
     PKCS7_free (gen_pkcs7_struct);
