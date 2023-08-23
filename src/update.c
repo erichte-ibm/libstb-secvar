@@ -9,6 +9,7 @@
 #include "config.h"
 #include "secvar/esl.h"
 #include "secvar/crypto.h"
+#include "secvar/crypto_util.h"
 #include "secvar/util.h"
 #include "secvar/pseries.h"
 #include "secvar/authentication_2.h"
@@ -62,7 +63,7 @@ verify_aginst_pk (const auth_db_t *auth_db, crypto_pkcs7_t *pkcs7,
        * TODO maybe this is too harsh? - we could try a KEK?
        * you can recover by doing an unauthenticated PK update
        */
-      rc = crypto.validate_x509_certificate (pk);
+      rc = validate_x509_certificate (pk);
       if (rc != SV_SUCCESS)
         {
           prlog (PR_ERR, "PK cert is not a good RSA cert.\n");
@@ -117,7 +118,7 @@ verify_aginst_kek (const auth_db_t *auth_db, crypto_pkcs7_t *pkcs7,
               return SV_X509_PARSE_ERROR;
             }
 
-          rc = crypto.validate_x509_certificate (kek);
+          rc = validate_x509_certificate (kek);
           if (rc != SV_SUCCESS)
             {
               prlog (PR_ERR, "KEK cert is not a good RSA cert.\n");
@@ -159,7 +160,7 @@ verify_signature (const auth_data_t *auth_data, const timestamp_t *timestamp,
   crypto_pkcs7_t *pkcs7 = NULL;
 
   /* convert cert into PKCS#7 structure */
-  rc = crypto.get_pkcs7_certificate (cert_data, cert_data_size, &pkcs7);
+  rc = get_pkcs7_certificate (cert_data, cert_data_size, &pkcs7);
   if (rc != SV_SUCCESS)
     {
       prlog (PR_ERR, "PKCS#7 message failed to parse as DER.\n");

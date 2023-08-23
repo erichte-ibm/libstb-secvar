@@ -4,11 +4,11 @@
  */
 #include <stdint.h>
 #include <string.h>
+#include "secvar/crypto_util.h"
 #include "secvar/crypto.h"
 #include "libstb-secvar-errors.h"
 
-static int
-validate_x509_certificate (crypto_x509_t *x509)
+int validate_x509_certificate (crypto_x509_t *x509)
 {
   int len = 0;
 
@@ -41,8 +41,7 @@ validate_x509_certificate (crypto_x509_t *x509)
   return SV_SUCCESS;
 }
 
-static int
-get_pkcs7_certificate (const uint8_t *cert_data, size_t cert_data_len, crypto_pkcs7_t **pkcs7_cert)
+int get_pkcs7_certificate (const uint8_t *cert_data, size_t cert_data_len, crypto_pkcs7_t **pkcs7_cert)
 {
   crypto_pkcs7_t *pkcs7;
 
@@ -61,8 +60,3 @@ get_pkcs7_certificate (const uint8_t *cert_data, size_t cert_data_len, crypto_pk
 
   return SV_SUCCESS;
 }
-
-crypto_func_t crypto = {
-                         .get_pkcs7_certificate = get_pkcs7_certificate,
-                         .validate_x509_certificate = validate_x509_certificate,
-                         };

@@ -7,6 +7,7 @@
 #include "log.h"
 #include "config.h"
 #include "secvar/crypto.h"
+#include "secvar/crypto_util.h"
 #include "secvar/util.h"
 #include "secvar/esl.h"
 #include "secvar/pseries.h"
@@ -124,7 +125,7 @@ cert_parses_as_good_RSA (const uint8_t *cert_data, size_t cert_size, const bool 
     return false;
 
   /* must be RSA-2048/4096 */
-  rc = crypto.validate_x509_certificate (cert);
+  rc = validate_x509_certificate (cert);
   if (rc != SV_SUCCESS)
     {
       prlog (PR_ERR, "certificate validation failed (%d)\n", rc);

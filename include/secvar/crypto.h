@@ -111,8 +111,6 @@ int crypto_pkcs7_signed_hash_verify (crypto_pkcs7_t *pkcs7, crypto_x509_t *x509,
                                      unsigned char *hash, int hash_len);
 
 /**====================X509 Functions ====================**/
-typedef crypto_x509_t *(*crypto_x509_parse_der_cert) (const unsigned char *, size_t);
-typedef void (*crypto_str_error) (int, char *, size_t);
 
 /*
  * checks if the x509 is a CA certificate
@@ -264,17 +262,5 @@ void crypto_strerror (int rc, char *out_str, size_t out_max_len);
  */
 int crypto_convert_pem_to_der (const unsigned char *input, size_t ilen, unsigned char **output, size_t *olen);
 #endif
-
-typedef int (*get_pkcs7_cert) (const uint8_t *, size_t, crypto_pkcs7_t **);
-typedef int (*validate_x509_cert) (crypto_x509_t *);
-
-struct crypto
-{
-  get_pkcs7_cert get_pkcs7_certificate;
-  validate_x509_cert validate_x509_certificate;
-};
-
-typedef struct crypto crypto_func_t;
-extern crypto_func_t crypto;
 
 #endif
