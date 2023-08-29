@@ -26,4 +26,5 @@ target_include_directories ( stb-secvar-openssl AFTER PRIVATE
 
 target_compile_definitions ( stb-secvar-openssl PRIVATE
   SECVAR_CRYPTO_WRITE_FUNC
+  SECVAR_CRYPTO_OPENSSL # TODO: add crypto-specific builds
 )
