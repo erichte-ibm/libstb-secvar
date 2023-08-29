@@ -14,6 +14,7 @@ target_sources ( stb-secvar-openssl PRIVATE
   src/esl.c
   src/pseries.c
   src/update.c
+  src/log.c
 )
 
 target_include_directories ( stb-secvar-openssl AFTER PRIVATE
