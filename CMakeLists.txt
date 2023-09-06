@@ -21,7 +21,7 @@ target_include_directories ( stb-secvar-openssl AFTER PRIVATE
   ./
   include/
   include/secvar/
-  external/endian/
+  external/
   external/edk2/
 )
 

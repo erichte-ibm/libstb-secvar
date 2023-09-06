@@ -10,7 +10,7 @@ SRC_DIR = ../src
 BIN_DIR =./bin
 LIB_DIR =../lib
 
-INCLUDE = -I../include -I../
+INCLUDE = -I../include -I../ -I../external
 
 TEST_SRCS = test_esl.c \
             test_auth2.c \

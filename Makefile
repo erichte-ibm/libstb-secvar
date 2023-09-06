@@ -13,7 +13,7 @@ OBJ_DIR = ./obj
 LIB_DIR = ./lib
 TEST_DIR = ./test
 
-INCLUDE = -I./include -I./
+INCLUDE = -I./include -I./ -I./external
 
 DEBUG ?= 0
 ifeq ($(strip $(DEBUG)), 1)

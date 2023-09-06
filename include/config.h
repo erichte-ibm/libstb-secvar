@@ -30,7 +30,7 @@
 #error __BYTE_ORDER__ is undefined, edit config.h
 #endif
 
-#include <external/endian/endian.h>
+#include <ccan/endian/endian.h>
 #include <stdlib.h>
 #include <openssl/crypto.h>
 
