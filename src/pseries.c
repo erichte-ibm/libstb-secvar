@@ -14,23 +14,6 @@
 
 #define ESL_HEADER_SIZE 44
 
-struct var_timestamp
-{
-  leint16_t year;
-  uint8_t month;
-  uint8_t day;
-  uint8_t hour;
-  uint8_t minute;
-  uint8_t second;
-} SV_PACKED;
-
-typedef struct var_timestamp var_timestamp_t;
-
-struct signed_variable
-{
-  uint8_t version; /* must be 0 */
-  var_timestamp_t time;
-} SV_PACKED;
 
 /*
  * PK and KEK
@@ -58,27 +41,27 @@ static sv_err_t
 unpack_signed_var (const uint8_t *in, size_t in_size, const uint8_t **out_data,
                    size_t *out_size, timestamp_t *timestamp)
 {
-  const struct signed_variable *signed_var;
+  const struct signed_variable_header *signed_var;
   timestamp_t ts = { 0 };
 
   /* do not permit negative */
-  if (in_size < sizeof (struct signed_variable))
+  if (in_size < sizeof (struct signed_variable_header))
     return SV_UNPACK_ERROR;
 
-  signed_var = (const struct signed_variable *) in;
+  signed_var = (const struct signed_variable_header *) in;
   if (signed_var->version != 0)
     return SV_UNPACK_VERSION_ERROR;
 
-  ts.year = signed_var->time.year;
-  ts.month = signed_var->time.month;
-  ts.day = signed_var->time.day;
-  ts.hour = signed_var->time.hour;
-  ts.minute = signed_var->time.minute;
-  ts.second = signed_var->time.second;
+  ts.year = signed_var->timestamp.year;
+  ts.month = signed_var->timestamp.month;
+  ts.day = signed_var->timestamp.day;
+  ts.hour = signed_var->timestamp.hour;
+  ts.minute = signed_var->timestamp.minute;
+  ts.second = signed_var->timestamp.second;
   *timestamp = ts;
 
-  *out_data = in + sizeof (struct signed_variable);
-  *out_size = in_size - sizeof (struct signed_variable);
+  *out_data = in + sizeof (struct signed_variable_header);
+  *out_size = in_size - sizeof (struct signed_variable_header);
 
   return SV_SUCCESS;
 }
@@ -87,29 +70,29 @@ static sv_err_t
 pack_signed_var (const uint8_t *data, const size_t size, const timestamp_t *time,
                  uint8_t **packed_data, size_t *packed_size)
 {
-  struct signed_variable *signed_var;
+  struct signed_variable_header *signed_var;
 
   /* a PKS object has its size stored in a 16-bit so make sure we don't overflow that */
-  if (size > 0xffffUL - sizeof (struct signed_variable))
+  if (size > 0xffffUL - sizeof (struct signed_variable_header))
     return SV_TOO_MUCH_DATA;
 
-  *packed_size = size + sizeof (struct signed_variable);
+  *packed_size = size + sizeof (struct signed_variable_header);
   *packed_data = (uint8_t *) libstb_zalloc (*packed_size);
   if (!*packed_data)
     return SV_ALLOCATION_FAILED;
 
-  signed_var = (struct signed_variable *) *packed_data;
+  signed_var = (struct signed_variable_header *) *packed_data;
 
   signed_var->version = 0;
-  signed_var->time.year = time->year;
-  signed_var->time.month = time->month;
-  signed_var->time.day = time->day;
-  signed_var->time.hour = time->hour;
-  signed_var->time.minute = time->minute;
-  signed_var->time.second = time->second;
+  signed_var->timestamp.year = time->year;
+  signed_var->timestamp.month = time->month;
+  signed_var->timestamp.day = time->day;
+  signed_var->timestamp.hour = time->hour;
+  signed_var->timestamp.minute = time->minute;
+  signed_var->timestamp.second = time->second;
 
   if (data != NULL && size != 0)
-    memcpy (*packed_data + sizeof (struct signed_variable), data, size);
+    memcpy (*packed_data + sizeof (struct signed_variable_header), data, size);
 
   return SV_SUCCESS;
 }

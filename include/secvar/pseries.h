@@ -76,6 +76,23 @@ static const uuid_t POWER_VENDOR_GUID = { { 0x83, 0x75, 0xfd, 0x36, 0x6a, 0x98,
   "Yes, I want to delete all secure variables and reset secure boot to " \
   "static keys.\n"
 
+
+struct var_hdr_timestamp
+{
+  leint16_t year;
+  uint8_t month;
+  uint8_t day;
+  uint8_t hour;
+  uint8_t minute;
+  uint8_t second;
+} SV_PACKED;
+
+struct signed_variable_header
+{
+  uint8_t version; /* must be 0 */
+  struct var_hdr_timestamp timestamp;
+} SV_PACKED;
+
 /* derive our vendor GUID */
 uuid_t *
 get_guid (uint16_t *name);
