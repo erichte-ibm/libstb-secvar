@@ -35,7 +35,7 @@ int validate_x509_certificate (crypto_x509_t *x509)
     return len ? len : SV_UNEXPECTED_CRYPTO_ERROR;
 
   len = crypto_x509_get_pk_bit_len (x509);
-  if (len != 2048 && len != 4096)
+  if (len != 2048 && len != 3072 && len != 4096)
     return SV_UNEXPECTED_CERT_SIZE;
 
   return SV_SUCCESS;
