@@ -52,7 +52,7 @@ $(BIN_DIR)/test_%: test_%.c $(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).a
 .PRECIOUS: $(BIN_DIR)/test_gcov_%
 $(BIN_DIR)/test_gcov_%: test_%.c $(LIB_DIR)/libstb-secvar-$(CRYPTO_LIB).gcov.a
 	@mkdir -p $(BIN_DIR)
-	$(CC) -o $@ $^ $(_LDFLAGS) -Wall -Werror -g -O0 --coverage $(INCLUDE)
+	$(CC) -o $@ $^ $(_LDFLAGS) $(_CFLAGS) -Wall -Werror -g -O0 --coverage
 
 clean:
 	rm -rf $(BIN_DIR)
