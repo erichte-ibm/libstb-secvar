@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  * Copyright 2023 IBM Corp.
  */
+#include "edk2/common.h"
 #include "secvar/pseries.h"
 #include "secvar/authentication_2.h"
 #include "secvar/util.h"
@@ -13,6 +14,10 @@
 #include "data/kek_esl.h"
 #include "data/svc_db_by_PK_auth.h"
 #include "data/svc_dbx_by_KEK_auth.h"
+#include "data/pk_3k_esl.h"
+#include "data/pk_3k_auth.h"
+#include "data/pk_4k_esl.h"
+#include "data/pk_4k_auth.h"
 #include "libstb-secvar-errors.h"
 #include <stdio.h>
 #include <assert.h>
@@ -55,6 +60,43 @@ main (int argc, char **argv)
                          &verified_flag);
 
   assert_rc (SV_SUCCESS);
+
+  /* Test 3k key sizes */
+  auth_data.auth_msg = pk_3k_auth;
+  auth_data.auth_msg_size = pk_3k_auth_len;
+  auth_data.name = (uint16_t *) PK_NAME;
+  auth_data.vendor = (uuid_t *) &SV_GLOBAL_VARIABLE_GUID;
+  auth_data.attributes = SECVAR_ATTRIBUTES;
+  auth_data.auth_db.pk = pk_3k_esl;
+  auth_data.auth_db.pk_size = pk_3k_esl_len;
+
+  rc = unpack_authenticated_variable (&auth_data, &timestamp, &cert,
+                                      &cert_size, &data, &data_size);
+  assert_rc (SV_SUCCESS);
+
+  rc = verify_signature (&auth_data, &timestamp, cert, cert_size, data, data_size,
+                         &verified_flag);
+
+  assert_rc (SV_SUCCESS);
+
+  /* Test 4k key sizes */
+  auth_data.auth_msg = pk_4k_auth;
+  auth_data.auth_msg_size = pk_4k_auth_len;
+  auth_data.name = (uint16_t *) PK_NAME;
+  auth_data.vendor = (uuid_t *) &SV_GLOBAL_VARIABLE_GUID;
+  auth_data.attributes = SECVAR_ATTRIBUTES;
+  auth_data.auth_db.pk = pk_4k_esl;
+  auth_data.auth_db.pk_size = pk_4k_esl_len;
+
+  rc = unpack_authenticated_variable (&auth_data, &timestamp, &cert,
+                                      &cert_size, &data, &data_size);
+  assert_rc (SV_SUCCESS);
+
+  rc = verify_signature (&auth_data, &timestamp, cert, cert_size, data, data_size,
+                         &verified_flag);
+
+  assert_rc (SV_SUCCESS);
+
 
   memset (&auth_data, 0x00, sizeof (auth_data_t));
   auth_data.auth_msg = svc_dbx_by_KEK_auth;
